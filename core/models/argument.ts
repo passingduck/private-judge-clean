@@ -382,8 +382,8 @@ export class ArgumentModel {
 // 주장 유틸리티 함수들
 export const ArgumentUtils = {
   // 주장 정렬 함수
-  sortArguments(arguments: Argument[], sortBy: 'created' | 'submitted' | 'title' | 'side' | 'strength' = 'submitted'): Argument[] {
-    return [...arguments].sort((a, b) => {
+  sortArguments(argumentList: Argument[], sortBy: 'created' | 'submitted' | 'title' | 'side' | 'strength' = 'submitted'): Argument[] {
+    return [...argumentList].sort((a, b) => {
       switch (sortBy) {
         case 'created':
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -404,7 +404,7 @@ export const ArgumentUtils = {
   },
 
   // 주장 필터링
-  filterArguments(arguments: Argument[], filters: {
+  filterArguments(argumentList: Argument[], filters: {
     side?: ArgumentSide[];
     searchTerm?: string;
     userId?: string;
@@ -413,7 +413,7 @@ export const ArgumentUtils = {
     evidenceType?: EvidenceType;
     minStrength?: number;
   }): Argument[] {
-    return arguments.filter(argument => {
+    return argumentList.filter(argument => {
       if (filters.side && !filters.side.includes(argument.side)) {
         return false;
       }
@@ -462,7 +462,7 @@ export const ArgumentUtils = {
   },
 
   // 주장 통계
-  getArgumentStats(arguments: Argument[]): {
+  getArgumentStats(argumentList: Argument[]): {
     total: number;
     bySide: Record<ArgumentSide, number>;
     byEvidenceType: Record<EvidenceType, number>;
@@ -472,41 +472,41 @@ export const ArgumentUtils = {
     strongArguments: number; // 강도 80 이상
   } {
     const bySide = Object.values(ArgumentSide).reduce((acc, side) => {
-      acc[side] = arguments.filter(a => a.side === side).length;
+      acc[side] = argumentList.filter(a => a.side === side).length;
       return acc;
     }, {} as Record<ArgumentSide, number>);
 
     const byEvidenceType = Object.values(EvidenceType).reduce((acc, type) => {
-      acc[type] = arguments.filter(a => 
+      acc[type] = argumentList.filter(a => 
         a.evidence.some(e => e.type === type)
       ).length;
       return acc;
     }, {} as Record<EvidenceType, number>);
 
-    const totalWords = arguments.reduce((sum, arg) => {
+    const totalWords = argumentList.reduce((sum, arg) => {
       const model = new ArgumentModel(arg);
       return sum + model.getWordCount();
     }, 0);
 
-    const totalEvidence = arguments.reduce((sum, arg) => sum + arg.evidence.length, 0);
+    const totalEvidence = argumentList.reduce((sum, arg) => sum + arg.evidence.length, 0);
 
-    const totalStrength = arguments.reduce((sum, arg) => {
+    const totalStrength = argumentList.reduce((sum, arg) => {
       const model = new ArgumentModel(arg);
       return sum + model.getStrengthScore().score;
     }, 0);
 
-    const strongArguments = arguments.filter(arg => {
+    const strongArguments = argumentList.filter(arg => {
       const model = new ArgumentModel(arg);
       return model.getStrengthScore().score >= 80;
     }).length;
 
     return {
-      total: arguments.length,
+      total: argumentList.length,
       bySide,
       byEvidenceType,
-      averageWordCount: arguments.length > 0 ? Math.round(totalWords / arguments.length) : 0,
-      averageEvidenceCount: arguments.length > 0 ? Math.round(totalEvidence / arguments.length * 10) / 10 : 0,
-      averageStrengthScore: arguments.length > 0 ? Math.round(totalStrength / arguments.length) : 0,
+      averageWordCount: argumentList.length > 0 ? Math.round(totalWords / argumentList.length) : 0,
+      averageEvidenceCount: argumentList.length > 0 ? Math.round(totalEvidence / argumentList.length * 10) / 10 : 0,
+      averageStrengthScore: argumentList.length > 0 ? Math.round(totalStrength / argumentList.length) : 0,
       strongArguments
     };
   },
