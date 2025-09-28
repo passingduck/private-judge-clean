@@ -498,7 +498,7 @@ export async function GET(
     }
 
     // 주장 데이터 검증 및 변환
-    const arguments: any[] = [];
+    const argumentList: any[] = [];
     for (const argumentData of argumentsData || []) {
       const validation = ArgumentModel.validate(argumentData);
       if (validation.success) {
@@ -506,7 +506,7 @@ export async function GET(
         const argumentModel = new ArgumentModel(argument);
         const summary = argumentModel.getSummary();
         
-        arguments.push({
+        argumentList.push({
           id: argument.id,
           title: argument.title,
           content: argument.content,
@@ -532,8 +532,8 @@ export async function GET(
     }
 
     // 측면별 분류
-    const argumentsA = arguments.filter(arg => arg.side === 'A');
-    const argumentsB = arguments.filter(arg => arg.side === 'B');
+    const argumentsA = argumentList.filter(arg => arg.side === 'A');
+    const argumentsB = argumentList.filter(arg => arg.side === 'B');
 
     // 대결 분석
     const argumentsAData = argumentsData?.filter(arg => arg.side === 'A').map(arg => {
@@ -554,7 +554,7 @@ export async function GET(
       requestId, 
       roomId, 
       userId,
-      totalArguments: arguments.length,
+      totalArguments: argumentList.length,
       sideACount: argumentsA.length,
       sideBCount: argumentsB.length
     });
@@ -566,19 +566,19 @@ export async function GET(
         B: argumentsB
       },
       statistics: {
-        total_count: arguments.length,
+        total_count: argumentList.length,
         side_a_count: argumentsA.length,
         side_b_count: argumentsB.length,
         both_sides_submitted: argumentsA.length > 0 && argumentsB.length > 0,
-        average_strength: arguments.length > 0 
-          ? Math.round(arguments.reduce((sum, arg) => sum + arg.strength_score, 0) / arguments.length)
+        average_strength: argumentList.length > 0 
+          ? Math.round(argumentList.reduce((sum, arg) => sum + arg.strength_score, 0) / argumentList.length)
           : 0
       },
       debate_analysis: debateAnalysis,
-      user_argument: arguments.find(arg => arg.is_own) || null,
+      user_argument: argumentList.find(arg => arg.is_own) || null,
       can_submit: roomModel.getUserSide(userId) && 
                   room.status === RoomStatus.ARGUMENTS_SUBMISSION &&
-                  !arguments.some(arg => arg.is_own),
+                  !argumentList.some(arg => arg.is_own),
       requestId
     });
 
