@@ -57,14 +57,13 @@ export async function GET(request: NextRequest) {
 
         healthData.checks.openai = {
           status: response.ok ? 'healthy' : 'unhealthy',
-          responseTime: Date.now() - openaiStartTime,
-          statusCode: response.status
+          responseTime: Date.now() - openaiStartTime
         };
       } catch (openaiError: any) {
         healthData.checks.openai = {
           status: 'unhealthy',
           responseTime: Date.now() - startTime,
-          error: openaiError.message
+          ...(openaiError && { error: openaiError.message })
         };
       }
     } else {
@@ -91,14 +90,13 @@ export async function GET(request: NextRequest) {
 
         healthData.checks.supabase_edge_functions = {
           status: response.status === 404 ? 'healthy' : 'unknown', // 404는 함수가 존재하지만 HEAD를 지원하지 않음을 의미
-          responseTime: Date.now() - edgeStartTime,
-          statusCode: response.status
+          responseTime: Date.now() - edgeStartTime
         };
       } catch (edgeError: any) {
         healthData.checks.supabase_edge_functions = {
           status: 'unhealthy',
           responseTime: Date.now() - startTime,
-          error: edgeError.message
+          ...(edgeError && { error: edgeError.message })
         };
       }
     } else {
