@@ -111,7 +111,7 @@ export async function GET(
         roomValidation.error
       );
       return NextResponse.json(
-        { message: MESSAGES.COMMON.INVALID_DATA },
+        { message: '유효하지 않은 데이터입니다' },
         { status: 500 }
       );
     }
