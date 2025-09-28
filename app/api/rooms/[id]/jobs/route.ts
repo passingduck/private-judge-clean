@@ -89,7 +89,7 @@ export async function GET(
           `[${requestId}] Room not found or access denied for room ${roomId} by user ${userId}`
         );
         return NextResponse.json(
-          { message: MESSAGES.ROOM.NOT_FOUND },
+          { message: '토론방을 찾을 수 없습니다' },
           { status: 404 }
         );
       }
