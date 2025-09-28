@@ -13,9 +13,9 @@ export async function GET(request: NextRequest) {
       version: process.env.npm_package_version || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
       checks: {
-        database: { status: 'unknown', responseTime: 0, error?: string },
-        openai: { status: 'unknown', responseTime: 0, error?: string },
-        supabase_edge_functions: { status: 'unknown', responseTime: 0, error?: string }
+        database: { status: 'unknown', responseTime: 0 },
+        openai: { status: 'unknown', responseTime: 0 },
+        supabase_edge_functions: { status: 'unknown', responseTime: 0 }
       }
     };
 
@@ -32,13 +32,13 @@ export async function GET(request: NextRequest) {
       healthData.checks.database = {
         status: error ? 'unhealthy' : 'healthy',
         responseTime: Date.now() - dbStartTime,
-        error: error?.message
+        ...(error && { error: error.message })
       };
     } catch (dbError: any) {
       healthData.checks.database = {
         status: 'unhealthy',
         responseTime: Date.now() - startTime,
-        error: dbError.message
+        ...(dbError && { error: dbError.message })
       };
     }
 
