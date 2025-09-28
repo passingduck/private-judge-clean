@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       healthData.checks.openai = {
         status: 'not_configured',
         responseTime: 0,
-        error: 'OPENAI_API_KEY not set'
+        ...({ error: 'OPENAI_API_KEY not set' })
       };
     }
 
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
       healthData.checks.supabase_edge_functions = {
         status: 'not_configured',
         responseTime: 0,
-        error: 'SUPABASE_URL not set'
+        ...({ error: 'SUPABASE_URL not set' })
       };
     }
 
