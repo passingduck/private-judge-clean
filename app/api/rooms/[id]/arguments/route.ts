@@ -242,7 +242,7 @@ export async function POST(
 
     // 주장 생성
     const now = new Date().toISOString();
-    const { data: argumentData, error: createError } = await supabase
+    const { data: createdArgumentData, error: createError } = await supabase
       .from('arguments')
       .insert({
         room_id: roomId,
@@ -271,7 +271,7 @@ export async function POST(
       );
     }
 
-    const argumentValidation = ArgumentModel.validate(argumentData);
+    const argumentValidation = ArgumentModel.validate(createdArgumentData);
     if (!argumentValidation.success) {
       console.error('[arguments-api] POST argument validation failed', { 
         requestId, 
