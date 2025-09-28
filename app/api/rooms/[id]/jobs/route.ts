@@ -143,7 +143,7 @@ export async function GET(
         jobsError.message
       );
       return NextResponse.json(
-        { message: MESSAGES.JOB.FETCH_FAILED },
+        { message: '작업 목록을 가져오는데 실패했습니다' },
         { status: 500 }
       );
     }
