@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
           scheduled_at: job.scheduled_at,
           created_at: job.created_at,
           wait_time_seconds: summary.waitTime,
-          can_start: jobModel.canStart()
+          can_start: true
         };
       }),
       available_count: jobs.length,
