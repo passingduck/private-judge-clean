@@ -546,9 +546,7 @@ export async function GET(
       return validation.success ? validation.data : null;
     }).filter(Boolean) as Argument[];
 
-    const debateAnalysis = argumentsAData.length > 0 && argumentsBData.length > 0 
-      ? ArgumentModel.analyzeDebate(argumentsAData, argumentsBData)
-      : null;
+    const debateAnalysis = null;
 
     console.info('[arguments-api] GET success', { 
       requestId, 
