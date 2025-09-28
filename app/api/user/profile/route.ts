@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
           `[${requestId}] User not found: ${userId}`
         );
         return NextResponse.json(
-          { message: MESSAGES.AUTH.USER_NOT_FOUND },
+          { message: '사용자를 찾을 수 없습니다' },
           { status: 404 }
         );
       }
