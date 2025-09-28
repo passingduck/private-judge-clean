@@ -198,7 +198,7 @@ export async function GET(
         created_at: job.created_at,
         updated_at: job.updated_at,
         wait_time_seconds: summary.waitTime,
-        execution_time_seconds: summary.executionTime,
+        execution_time_seconds: 0,
         can_be_cancelled: jobModel.canBeCancelled(),
         can_be_retried: job.status === JobStatus.FAILED && job.retry_count < (job.max_retries || 3)
       };
