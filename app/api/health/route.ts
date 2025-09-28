@@ -13,9 +13,9 @@ export async function GET(request: NextRequest) {
       version: process.env.npm_package_version || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
       checks: {
-        database: { status: 'unknown', responseTime: 0 },
-        openai: { status: 'unknown', responseTime: 0 },
-        supabase_edge_functions: { status: 'unknown', responseTime: 0 }
+        database: { status: 'unknown', responseTime: 0, error?: string },
+        openai: { status: 'unknown', responseTime: 0, error?: string },
+        supabase_edge_functions: { status: 'unknown', responseTime: 0, error?: string }
       }
     };
 
