@@ -137,9 +137,9 @@ export async function GET(request: NextRequest) {
           type: job.type,
           status: job.status,
           room_id: job.room_id,
-          room: jobData.room ? {
-            id: jobData.room.id,
-            title: jobData.room.title
+          room: job.room ? {
+            id: job.room.id,
+            title: job.room.title
           } : null,
           payload: job.payload,
           priority: summary.priority,
