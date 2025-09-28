@@ -162,8 +162,8 @@ export async function POST(
     }
 
     // 양측 주장 확인
-    const argumentsA = roomData.arguments?.filter(arg => arg.side === 'A') || [];
-    const argumentsB = roomData.arguments?.filter(arg => arg.side === 'B') || [];
+    const argumentsA = roomData.arguments?.filter((arg: any) => arg.side === 'A') || [];
+    const argumentsB = roomData.arguments?.filter((arg: any) => arg.side === 'B') || [];
 
     if (argumentsA.length === 0 || argumentsB.length === 0) {
       console.warn('[debate-start-api] POST missing arguments', { 
