@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         *,
         room:rooms(id, title, creator_id, participant_id)
       `)
-      .eq('status', JobStatus.PENDING)
+      .eq('status', JobStatus.QUEUED)
       .lte('scheduled_at', new Date().toISOString())
       .order('scheduled_at', { ascending: true })
       .limit(limit);
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
     const { count: totalPendingCount } = await supabase
       .from('jobs')
       .select('id', { count: 'exact' })
-      .eq('status', JobStatus.PENDING);
+      .eq('status', JobStatus.QUEUED);
 
     const { count: totalRunningCount } = await supabase
       .from('jobs')
@@ -316,7 +316,7 @@ export async function POST(request: NextRequest) {
         worker_id: worker_id || null
       })
       .eq('id', job_id)
-      .eq('status', JobStatus.PENDING) // 동시성 제어
+      .eq('status', JobStatus.QUEUED) // 동시성 제어
       .select()
       .single();
 
