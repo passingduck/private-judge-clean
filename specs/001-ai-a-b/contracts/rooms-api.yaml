@@ -1,0 +1,406 @@
+openapi: 3.0.3
+info:
+  title: Rooms API
+  description: 방 생성, 입장, 관리를 위한 API
+  version: 1.0.0
+
+paths:
+  /api/rooms:
+    post:
+      summary: 새 토론 방 생성
+      tags: [Rooms]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                  minLength: 5
+                  maxLength: 200
+                  example: "환경보호 vs 경제성장 우선순위"
+                description:
+                  type: string
+                  maxLength: 1000
+                  example: "환경보호와 경제성장 중 어느 것이 우선되어야 하는가?"
+      responses:
+        '201':
+          description: 방 생성 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  code:
+                    type: string
+                    pattern: '^[A-Z0-9]{6}$'
+                    example: "ABC123"
+                  title:
+                    type: string
+                  status:
+                    type: string
+                    enum: [waiting_participant]
+                  created_at:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    get:
+      summary: 사용자의 방 목록 조회
+      tags: [Rooms]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [waiting_participant, agenda_negotiation, arguments_submission, ai_processing, completed, cancelled]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: 방 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rooms:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Room'
+                  total:
+                    type: integer
+                  has_more:
+                    type: boolean
+
+  /api/rooms/{roomId}:
+    get:
+      summary: 특정 방 정보 조회
+      tags: [Rooms]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 방 정보 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomDetail'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/rooms/join:
+    post:
+      summary: 방 코드로 입장
+      tags: [Rooms]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  pattern: '^[A-Z0-9]{6}$'
+                  example: "ABC123"
+      responses:
+        '200':
+          description: 방 입장 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: 방을 찾을 수 없음
+        '409':
+          description: 이미 참여 중이거나 방이 가득 찬 경우
+
+  /api/rooms/{roomId}/status:
+    get:
+      summary: 방 진행 상태 조회 (폴링용)
+      tags: [Rooms]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 상태 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [waiting_participant, agenda_negotiation, arguments_submission, ai_processing, completed, cancelled]
+                  progress:
+                    type: object
+                    properties:
+                      current_step:
+                        type: string
+                      total_steps:
+                        type: integer
+                      completed_steps:
+                        type: integer
+                      estimated_completion:
+                        type: string
+                        format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Room:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          pattern: '^[A-Z0-9]{6}$'
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [waiting_participant, agenda_negotiation, arguments_submission, ai_processing, completed, cancelled]
+        creator_id:
+          type: string
+          format: uuid
+        participant_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    RoomDetail:
+      allOf:
+        - $ref: '#/components/schemas/Room'
+        - type: object
+          properties:
+            agenda:
+              $ref: '#/components/schemas/Agenda'
+            arguments:
+              type: array
+              items:
+                $ref: '#/components/schemas/Argument'
+            debate_sessions:
+              type: array
+              items:
+                $ref: '#/components/schemas/DebateSession'
+            verdict:
+              $ref: '#/components/schemas/Verdict'
+
+    Agenda:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [proposed, under_negotiation, agreed, rejected]
+        proposer_id:
+          type: string
+          format: uuid
+        negotiation_history:
+          type: array
+          items:
+            type: object
+        agreed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Argument:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        side:
+          type: string
+          enum: [A, B]
+        title:
+          type: string
+        content:
+          type: string
+        evidence:
+          type: array
+          items:
+            type: object
+        submitted_at:
+          type: string
+          format: date-time
+
+    DebateSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        round:
+          type: integer
+          minimum: 1
+          maximum: 3
+        lawyer_a_response:
+          type: object
+        lawyer_b_response:
+          type: object
+        status:
+          type: string
+          enum: [pending, in_progress, completed, failed]
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Verdict:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        winner:
+          type: string
+          enum: [A, B, draw]
+        reasoning:
+          type: string
+        strengths_a:
+          type: string
+        weaknesses_a:
+          type: string
+        strengths_b:
+          type: string
+        weaknesses_b:
+          type: string
+        overall_quality:
+          type: integer
+          minimum: 1
+          maximum: 10
+        generated_at:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: 잘못된 요청
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              details:
+                type: object
+
+    Unauthorized:
+      description: 인증 필요
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "unauthorized"
+              message:
+                type: string
+                example: "인증이 필요합니다"
+
+    Forbidden:
+      description: 접근 권한 없음
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "forbidden"
+              message:
+                type: string
+                example: "이 방에 접근할 권한이 없습니다"
+
+    NotFound:
+      description: 리소스를 찾을 수 없음
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "not_found"
+              message:
+                type: string
+                example: "요청한 리소스를 찾을 수 없습니다"

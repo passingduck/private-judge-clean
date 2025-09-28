@@ -1,0 +1,500 @@
+openapi: 3.0.3
+info:
+  title: Debates API
+  description: 안건 합의, 주장 제출, AI 토론 관리를 위한 API
+  version: 1.0.0
+
+paths:
+  /api/debates/agenda:
+    post:
+      summary: 안건 제안
+      tags: [Debates]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [room_id, title, description]
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                  minLength: 10
+                  maxLength: 300
+                  example: "환경보호가 경제성장보다 우선되어야 한다"
+                description:
+                  type: string
+                  minLength: 50
+                  maxLength: 2000
+                  example: "기후변화와 환경파괴가 심각한 상황에서..."
+      responses:
+        '201':
+          description: 안건 제안 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agenda'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/debates/agenda/{agendaId}/respond:
+    post:
+      summary: 안건에 대한 응답 (수정/거절/수락)
+      tags: [Debates]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: agendaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [modify, reject, accept]
+                modifications:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      minLength: 10
+                      maxLength: 300
+                    description:
+                      type: string
+                      minLength: 50
+                      maxLength: 2000
+                reason:
+                  type: string
+                  minLength: 10
+                  maxLength: 500
+                  description: "거절 또는 수정 사유"
+      responses:
+        '200':
+          description: 응답 처리 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agenda'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/debates/arguments:
+    post:
+      summary: 주장 제출
+      tags: [Debates]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [room_id, title, content]
+              properties:
+                room_id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                  minLength: 10
+                  maxLength: 200
+                  example: "환경보호 우선 정책의 필요성"
+                content:
+                  type: string
+                  minLength: 100
+                  maxLength: 5000
+                  example: "기후변화로 인한 피해가 경제적 손실보다 크다..."
+                evidence:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [link, document, statistic, quote]
+                      title:
+                        type: string
+                      url:
+                        type: string
+                        format: uri
+                      description:
+                        type: string
+      responses:
+        '201':
+          description: 주장 제출 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Argument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: 이미 주장을 제출한 경우
+
+  /api/debates/{roomId}/start:
+    post:
+      summary: AI 토론 시작
+      tags: [Debates]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: AI 토론 시작 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [queued]
+                  estimated_duration:
+                    type: string
+                    example: "15-20 minutes"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/debates/{roomId}/sessions:
+    get:
+      summary: 토론 세션 조회
+      tags: [Debates]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 토론 세션 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DebateSession'
+                  current_round:
+                    type: integer
+                    minimum: 1
+                    maximum: 3
+                  status:
+                    type: string
+                    enum: [pending, in_progress, completed]
+
+  /api/debates/{roomId}/verdict:
+    get:
+      summary: 최종 판결 조회
+      tags: [Debates]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 판결 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verdict:
+                    $ref: '#/components/schemas/Verdict'
+                  jury_votes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/JuryVote'
+        '404':
+          description: 아직 판결이 생성되지 않음
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Agenda:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        room_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        proposer_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [proposed, under_negotiation, agreed, rejected]
+        negotiation_history:
+          type: array
+          items:
+            type: object
+            properties:
+              action:
+                type: string
+                enum: [proposed, modified, rejected, accepted]
+              user_id:
+                type: string
+                format: uuid
+              changes:
+                type: object
+              reason:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+        agreed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    Argument:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        room_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        side:
+          type: string
+          enum: [A, B]
+        title:
+          type: string
+        content:
+          type: string
+        evidence:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [link, document, statistic, quote]
+              title:
+                type: string
+              url:
+                type: string
+                format: uri
+              description:
+                type: string
+        submitted_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    DebateSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        room_id:
+          type: string
+          format: uuid
+        round:
+          type: integer
+          minimum: 1
+          maximum: 3
+        lawyer_a_response:
+          type: object
+          properties:
+            argument:
+              type: string
+            key_points:
+              type: array
+              items:
+                type: string
+            counter_arguments:
+              type: array
+              items:
+                type: string
+            evidence_analysis:
+              type: string
+        lawyer_b_response:
+          type: object
+          properties:
+            argument:
+              type: string
+            key_points:
+              type: array
+              items:
+                type: string
+            counter_arguments:
+              type: array
+              items:
+                type: string
+            evidence_analysis:
+              type: string
+        status:
+          type: string
+          enum: [pending, in_progress, completed, failed]
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    JuryVote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        room_id:
+          type: string
+          format: uuid
+        jury_number:
+          type: integer
+          minimum: 1
+          maximum: 7
+        vote:
+          type: string
+          enum: [A, B]
+        reasoning:
+          type: string
+        confidence:
+          type: integer
+          minimum: 1
+          maximum: 10
+        created_at:
+          type: string
+          format: date-time
+
+    Verdict:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        room_id:
+          type: string
+          format: uuid
+        winner:
+          type: string
+          enum: [A, B, draw]
+        reasoning:
+          type: string
+        strengths_a:
+          type: string
+        weaknesses_a:
+          type: string
+        strengths_b:
+          type: string
+        weaknesses_b:
+          type: string
+        overall_quality:
+          type: integer
+          minimum: 1
+          maximum: 10
+        jury_summary:
+          type: object
+          properties:
+            votes_a:
+              type: integer
+            votes_b:
+              type: integer
+            average_confidence:
+              type: number
+        generated_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: 잘못된 요청
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              details:
+                type: object
+
+    Forbidden:
+      description: 접근 권한 없음
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "forbidden"
+              message:
+                type: string
+                example: "이 작업을 수행할 권한이 없습니다"
