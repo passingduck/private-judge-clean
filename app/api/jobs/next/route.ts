@@ -382,7 +382,7 @@ export async function POST(request: NextRequest) {
         max_retries: updatedJob.max_retries,
         started_at: updatedJob.started_at,
         created_at: updatedJob.created_at,
-        worker_id: updatedJob.worker_id
+        worker_id: null
       },
       message: '작업이 시작되었습니다',
       requestId
