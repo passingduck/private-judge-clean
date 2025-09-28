@@ -6,6 +6,7 @@ export const MESSAGES = {
     LOADING: '로딩 중...',
     ERROR: '오류가 발생했습니다',
     SUCCESS: '성공적으로 완료되었습니다',
+    SERVER_ERROR: '서버 오류가 발생했습니다',
     CONFIRM: '확인',
     CANCEL: '취소',
     SAVE: '저장',
