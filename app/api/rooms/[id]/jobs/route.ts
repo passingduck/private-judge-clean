@@ -34,7 +34,7 @@ export async function GET(
     if (!userId || !userEmail) {
       console.warn(`[${requestId}] Unauthorized: No user ID found.`);
       return NextResponse.json(
-        { message: MESSAGES.AUTH.UNAUTHORIZED },
+        { message: MESSAGES.AUTH.LOGIN_REQUIRED },
         { status: 401 }
       );
     }
