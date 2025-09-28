@@ -137,10 +137,7 @@ export async function GET(request: NextRequest) {
           type: job.type,
           status: job.status,
           room_id: job.room_id,
-          room: job.room ? {
-            id: job.room.id,
-            title: job.room.title
-          } : null,
+          room: null,
           payload: job.payload,
           priority: summary.priority,
           retry_count: job.retry_count,
