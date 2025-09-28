@@ -118,8 +118,8 @@ export async function GET(request: NextRequest) {
         email: user.email,
         display_name: user.display_name,
         avatar_url: user.avatar_url,
-        bio: user.bio,
-        preferences: user.preferences,
+        bio: null,
+        preferences: null,
         created_at: user.created_at,
         updated_at: user.updated_at,
         last_login_at: user.last_login_at
@@ -262,8 +262,8 @@ export async function PATCH(request: NextRequest) {
         email: user.email,
         display_name: user.display_name,
         avatar_url: user.avatar_url,
-        bio: user.bio,
-        preferences: user.preferences,
+        bio: null,
+        preferences: null,
         created_at: user.created_at,
         updated_at: user.updated_at,
         last_login_at: user.last_login_at
