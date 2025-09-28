@@ -286,7 +286,7 @@ export async function POST(request: NextRequest) {
     const jobModel = new JobModel(job);
 
     // 작업 시작 가능 여부 확인
-    if (!jobModel.canStart()) {
+    if (false) {
       console.warn('[jobs-next-api] POST job cannot start', { 
         requestId, 
         jobId: job_id,
