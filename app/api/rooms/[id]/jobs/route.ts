@@ -165,9 +165,9 @@ export async function GET(
     // 작업 통계 계산
     const statistics = {
       total_count: count || 0,
-      pending_count: jobs.filter(job => job.status === JobStatus.PENDING).length,
+      pending_count: jobs.filter(job => job.status === JobStatus.QUEUED).length,
       running_count: jobs.filter(job => job.status === JobStatus.RUNNING).length,
-      completed_count: jobs.filter(job => job.status === JobStatus.COMPLETED).length,
+      completed_count: jobs.filter(job => job.status === JobStatus.SUCCEEDED).length,
       failed_count: jobs.filter(job => job.status === JobStatus.FAILED).length,
       cancelled_count: jobs.filter(job => job.status === JobStatus.CANCELLED).length,
       by_type: {} as Record<JobType, number>
