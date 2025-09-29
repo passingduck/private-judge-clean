@@ -76,7 +76,7 @@ export default function RoomCreate({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || MESSAGES.ROOM.CREATE_FAILED);
+        throw new Error(errorData.message || '토론방 생성에 실패했습니다.');
       }
 
       const newRoom = await response.json();
