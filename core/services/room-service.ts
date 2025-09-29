@@ -309,7 +309,7 @@ export class RoomService {
     }
 
     // 진행 중인 토론은 삭제 불가
-    if (room.status === RoomStatus.AI_DEBATE_IN_PROGRESS) {
+    if (room.status === 'ai_debate_in_progress') {
       throw new Error('진행 중인 토론은 삭제할 수 없습니다');
     }
 
