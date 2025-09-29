@@ -216,7 +216,7 @@ export class DebateService {
     const { data: verdictData } = await this.supabase
       .from('judge_decisions')
       .select('*')
-      .eq('session_id', session.id)
+      .eq('session_id', sessionData.id)
       .single();
 
     let verdict: Verdict | undefined;
