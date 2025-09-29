@@ -523,7 +523,7 @@ export class DebateService {
     const { data: roomData } = await this.supabase
       .from('rooms')
       .select('creator_id')
-      .eq('id', sessionData.room_id)
+      .eq('id', (session as any).room_id)
       .single();
 
     if (!roomData || roomData.creator_id !== userId) {
