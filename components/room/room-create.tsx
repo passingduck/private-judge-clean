@@ -113,7 +113,7 @@ export default function RoomCreate({
     <div className={`bg-white rounded-lg shadow-md ${className}`}>
       <div className="p-6 border-b border-gray-200">
         <h2 className="text-2xl font-bold text-gray-900">
-          {MESSAGES.CREATE_ROOM.TITLE}
+          새 토론방 만들기
         </h2>
         <p className="mt-1 text-sm text-gray-600">
           새로운 토론방을 생성하여 다른 사용자와 토론을 시작하세요.
