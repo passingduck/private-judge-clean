@@ -146,7 +146,7 @@ export class JobService {
     let query = this.supabase
       .from('jobs')
       .select('*')
-      .eq('status', JobStatus.PENDING)
+      .eq('status', JobStatus.QUEUED)
       .lte('scheduled_at', new Date().toISOString())
       .order('scheduled_at', { ascending: true })
       .limit(1);
@@ -266,7 +266,7 @@ export class JobService {
 
     if (shouldRetry && newRetryCount <= maxRetries) {
       // 재시도 가능
-      newStatus = JobStatus.PENDING;
+      newStatus = JobStatus.QUEUED;
       // 지수 백오프: 2^retry_count 분 후 재시도
       const retryDelayMinutes = Math.pow(2, newRetryCount);
       scheduledAt = new Date(Date.now() + retryDelayMinutes * 60 * 1000).toISOString();
@@ -407,7 +407,7 @@ export class JobService {
       .from('jobs')
       .select('*')
       .eq('room_id', roomId)
-      .in('status', [JobStatus.PENDING, JobStatus.RUNNING])
+      .in('status', [JobStatus.QUEUED, JobStatus.RUNNING])
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -485,7 +485,7 @@ export class JobService {
 
     for (const job of data || []) {
       switch (job.status) {
-        case JobStatus.PENDING:
+        case JobStatus.QUEUED:
           stats.pending++;
           break;
         case JobStatus.RUNNING:
@@ -534,7 +534,7 @@ export class JobService {
     let query = this.supabase
       .from('jobs')
       .select('id', { count: 'exact' })
-      .eq('status', JobStatus.PENDING);
+      .eq('status', JobStatus.QUEUED);
 
     if (type) {
       query = query.eq('type', type);
@@ -566,7 +566,7 @@ export class JobService {
     const { data, error } = await this.supabase
       .from('jobs')
       .select('type, status, created_at, started_at')
-      .in('status', [JobStatus.PENDING, JobStatus.RUNNING]);
+      .in('status', [JobStatus.QUEUED, JobStatus.RUNNING]);
 
     if (error) {
       throw new Error(`큐 상태 조회 실패: ${error.message}`);
@@ -589,7 +589,7 @@ export class JobService {
         status.byType[job.type as JobType] = { pending: 0, running: 0 };
       }
 
-      if (job.status === JobStatus.PENDING) {
+      if (job.status === JobStatus.QUEUED) {
         status.totalPending++;
         status.byType[job.type as JobType].pending++;
         
