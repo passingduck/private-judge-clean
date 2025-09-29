@@ -259,11 +259,13 @@ export default function RoomStatusComponent({
           </h4>
           <Stepper 
             currentStep={currentStepIndex}
-            steps={STEP_ORDER.map(status => ({
-              label: MESSAGES.ROOM_STATUS[status] || status,
+            steps={STEP_ORDER.map((status, index) => ({
+              id: status,
+              title: STATUS_INFO[status]?.description || status,
+              label: STATUS_INFO[status]?.description || status,
               status: status === room.status ? 'current' : 
                      STEP_ORDER.indexOf(status) < currentStepIndex ? 'completed' : 
-                     room.status === RoomStatus.CANCELLED ? 'failed' : 'upcoming'
+                     room.status === RoomStatus.CANCELLED ? 'failed' : 'pending'
             }))}
           />
         </div>
