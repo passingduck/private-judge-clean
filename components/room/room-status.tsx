@@ -53,33 +53,12 @@ const STATUS_INFO: Record<RoomStatus, StatusInfo> = {
     description: '주장을 제출하는 단계입니다',
     nextAction: '양측이 주장과 근거를 제출'
   },
-  [RoomStatus.AI_DEBATE_IN_PROGRESS]: {
+  [RoomStatus.AI_PROCESSING]: {
     icon: ArrowPathIcon,
     color: 'text-indigo-600',
     bgColor: 'bg-indigo-50',
     description: 'AI 토론이 진행 중입니다',
     nextAction: 'AI가 자동으로 토론을 진행'
-  },
-  [RoomStatus.JUDGE_DECISION_PENDING]: {
-    icon: ScaleIcon,
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-50',
-    description: '심판이 판결을 내리는 중입니다',
-    nextAction: 'AI 심판이 최종 판결을 준비'
-  },
-  [RoomStatus.JURY_VOTING_PENDING]: {
-    icon: UserGroupIcon,
-    color: 'text-teal-600',
-    bgColor: 'bg-teal-50',
-    description: '배심원단이 투표 중입니다',
-    nextAction: 'AI 배심원들이 투표를 진행'
-  },
-  [RoomStatus.FINAL_REPORT_PENDING]: {
-    icon: ClipboardDocumentIcon,
-    color: 'text-cyan-600',
-    bgColor: 'bg-cyan-50',
-    description: '최종 보고서를 작성 중입니다',
-    nextAction: '종합 결과 보고서를 생성'
   },
   [RoomStatus.COMPLETED]: {
     icon: CheckCircleIcon,
