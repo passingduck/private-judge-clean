@@ -531,7 +531,7 @@ export class DebateService {
     }
 
     // 이미 완료된 토론은 취소 불가
-    if (session.status === 'completed') {
+    if ((session as any).status === 'completed') {
       throw new Error('이미 완료된 토론은 취소할 수 없습니다');
     }
 
