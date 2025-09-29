@@ -101,10 +101,6 @@ export default function RoomStatusComponent({
     if (!autoRefresh) return;
 
     const shouldAutoRefresh = [
-      RoomStatus.AI_DEBATE_IN_PROGRESS,
-      RoomStatus.JUDGE_DECISION_PENDING,
-      RoomStatus.JURY_VOTING_PENDING,
-      RoomStatus.FINAL_REPORT_PENDING,
       RoomStatus.AI_PROCESSING
     ].includes(room.status);
 
