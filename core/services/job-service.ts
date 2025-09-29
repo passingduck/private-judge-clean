@@ -435,7 +435,7 @@ export class JobService {
     const { data, error } = await this.supabase
       .from('jobs')
       .delete()
-      .in('status', [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED])
+      .in('status', [JobStatus.SUCCEEDED, JobStatus.FAILED, JobStatus.CANCELLED])
       .lt('completed_at', cutoffDate.toISOString())
       .select('id');
 
