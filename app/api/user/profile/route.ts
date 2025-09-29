@@ -228,7 +228,7 @@ export async function PATCH(request: NextRequest) {
         updateError.message
       );
       return NextResponse.json(
-        { message: MESSAGES.USER.UPDATE_FAILED },
+        { message: '사용자 정보 업데이트에 실패했습니다' },
         { status: 500 }
       );
     }
