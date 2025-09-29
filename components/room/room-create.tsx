@@ -71,7 +71,7 @@ export default function RoomCreate({
           'x-user-id': 'test-user-id-123',
           'x-user-email': 'test@example.com',
         },
-        body: JSON.stringify(roomData),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
