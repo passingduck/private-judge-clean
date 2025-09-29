@@ -198,7 +198,7 @@ export async function signUpWithPassword(
       session: data.session || null
     };
   } catch (error) {
-    console.error('[auth] Sign up failed', { requestId, email, error: error.message });
+    console.error('[auth] Sign up failed', { requestId, email, error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
