@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
         preferences: null,
         created_at: user.created_at,
         updated_at: user.updated_at,
-        last_login_at: user.last_login_at
+        last_login_at: null
       },
       statistics,
       recent_activity: recentRooms,
@@ -266,7 +266,7 @@ export async function PATCH(request: NextRequest) {
         preferences: null,
         created_at: user.created_at,
         updated_at: user.updated_at,
-        last_login_at: user.last_login_at
+        last_login_at: null
       },
       message: '프로필이 성공적으로 업데이트되었습니다',
       requestId
