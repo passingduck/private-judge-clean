@@ -109,7 +109,7 @@ export class DebateService {
     // 토론 세션 생성
     const sessionData = {
       room_id: options.roomId,
-      status: DebateStatus.PREPARING,
+      status: 'preparing',
       config: {
         max_rounds: options.config?.maxRounds || 3,
         time_limit: options.config?.timeLimit || 300, // 5분
@@ -232,7 +232,7 @@ export class DebateService {
     const completedRounds = rounds.filter(round => round.status === 'completed').length;
     const currentRoundNumber = rounds.length;
     const turnsInCurrentRound = currentRound?.turns?.length || 0;
-    const isComplete = session.status === DebateStatus.COMPLETED;
+    const isComplete = session.status === 'completed';
 
     return {
       session,
@@ -409,7 +409,7 @@ export class DebateService {
     const { data, error } = await this.supabase
       .from('debate_sessions')
       .update({
-        status: DebateStatus.COMPLETED,
+        status: 'completed',
         completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -531,7 +531,7 @@ export class DebateService {
     }
 
     // 이미 완료된 토론은 취소 불가
-    if (session.status === DebateStatus.COMPLETED) {
+    if (session.status === 'completed') {
       throw new Error('이미 완료된 토론은 취소할 수 없습니다');
     }
 
@@ -539,7 +539,7 @@ export class DebateService {
     await this.supabase
       .from('debate_sessions')
       .update({
-        status: DebateStatus.CANCELLED,
+        status: 'cancelled',
         updated_at: new Date().toISOString()
       })
       .eq('id', sessionId);
