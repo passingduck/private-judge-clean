@@ -228,11 +228,11 @@ export class DebateService {
     }
 
     // 진행 상황 계산
-    const totalRounds = session.config?.max_rounds || 3;
-    const completedRounds = rounds.filter(round => round.status === 'completed').length;
+    const totalRounds = sessionData.config?.max_rounds || 3;
+    const completedRounds = rounds.filter((round: any) => round.status === 'completed').length;
     const currentRoundNumber = rounds.length;
     const turnsInCurrentRound = currentRound?.turns?.length || 0;
-    const isComplete = session.status === 'completed';
+    const isComplete = sessionData.status === 'completed';
 
     return {
       session,
