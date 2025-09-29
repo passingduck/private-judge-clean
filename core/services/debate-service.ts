@@ -561,6 +561,6 @@ export class DebateService {
         status: RoomStatus.ARGUMENTS_SUBMISSION,
         updated_at: new Date().toISOString()
       })
-      .eq('id', session.room_id);
+      .eq('id', (session as any).room_id);
   }
 }
