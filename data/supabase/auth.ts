@@ -166,7 +166,7 @@ export async function signInWithPassword(
 
     return data as Session;
   } catch (error) {
-    console.error('[auth] Sign in failed', { requestId, email, error: error.message });
+    console.error('[auth] Sign in failed', { requestId, email, error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
