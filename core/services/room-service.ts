@@ -4,8 +4,7 @@ import {
   RoomModel, 
   RoomStatus, 
   CreateRoom, 
-  UpdateRoom,
-  RoomMember 
+  UpdateRoom
 } from '@/core/models/room';
 import { User } from '@/core/models/user';
 
