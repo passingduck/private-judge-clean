@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '@/data/supabase/client';
+import { getSupabaseClient } from '@/data/supabase/client';
 import { 
   DebateSession, 
   DebateSessionModel,
@@ -41,7 +41,7 @@ export interface DebateProgress {
 }
 
 export class DebateService {
-  private supabase = createSupabaseServerClient();
+  private supabase = getSupabaseClient(true); // service role
 
   /**
    * AI 토론을 시작합니다.
