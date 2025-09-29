@@ -155,7 +155,7 @@ export class DebateService {
     await this.supabase
       .from('rooms')
       .update({ 
-        status: RoomStatus.AI_DEBATE_IN_PROGRESS,
+        status: 'ai_debate_in_progress',
         updated_at: new Date().toISOString()
       })
       .eq('id', options.roomId);
