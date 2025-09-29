@@ -345,7 +345,7 @@ export class DebateService {
   ): Promise<Verdict> {
     const decisionData = {
       session_id: sessionId,
-      winner: decision.winner,
+      winner_side: decision.winner_side,
       reasoning: decision.reasoning,
       strengths_a: decision.strengthsA,
       weaknesses_a: decision.weaknessesA,
