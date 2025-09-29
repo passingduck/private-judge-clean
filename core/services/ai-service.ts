@@ -1,7 +1,8 @@
 import { 
-  parseLLMResponse
-} from '@/core/llm/parser';
-import { type LLMRole } from '@/core/llm/schemas';
+  validateLLMResponse,
+  LLMSchemas,
+  type LLMRole 
+} from '@/core/llm/schemas';
 import { Argument } from '@/core/models/argument';
 import { Motion } from '@/core/models/motion';
 // DebateRound and DebateTurn types will be defined inline
@@ -99,7 +100,7 @@ export class AIService {
 
     const response = await this.callOpenAI(prompt, requestId);
     
-    return parseLLMResponse(response, 'lawyer', { requestId });
+    return validateLLMResponse(LLMSchemas.lawyer, response, 'lawyer');
   }
 
   /**
@@ -130,7 +131,7 @@ export class AIService {
 
     const response = await this.callOpenAI(prompt, requestId);
     
-    return parseLLMResponse(response, 'judge', { requestId });
+    return validateLLMResponse(LLMSchemas.judge, response, 'judge');
   }
 
   /**
@@ -160,7 +161,7 @@ export class AIService {
 
     const response = await this.callOpenAI(prompt, requestId);
     
-    return parseLLMResponse(response, 'juror', { requestId });
+    return validateLLMResponse(LLMSchemas.juror, response, 'juror');
   }
 
   /**
@@ -188,7 +189,7 @@ export class AIService {
 
     const response = await this.callOpenAI(prompt, requestId);
     
-    return parseLLMResponse(response, 'judge', { requestId }); // Final report uses judge validation
+    return validateLLMResponse(LLMSchemas.judge, response, 'judge'); // Final report uses judge validation
   }
 
   /**
