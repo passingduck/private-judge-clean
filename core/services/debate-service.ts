@@ -2,10 +2,30 @@ import { getSupabaseClient } from '@/data/supabase/client';
 import { 
   DebateSession, 
   DebateSessionModel,
-  DebateRound,
-  DebateTurn,
   DebateStatus 
 } from '@/core/models/debate-session';
+
+// 인라인 타입 정의
+interface DebateRound {
+  id: string;
+  roundNumber: number;
+  turns: DebateTurn[];
+  status: 'pending' | 'in_progress' | 'completed';
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface DebateTurn {
+  id: string;
+  turnNumber: number;
+  side: 'A' | 'B';
+  lawyerType: 'lawyer_a' | 'lawyer_b';
+  statement: string;
+  keyPoints: string[];
+  counterArguments: string[];
+  evidenceReferences: string[];
+  createdAt: string;
+}
 import { 
   Verdict, 
   VerdictModel,
