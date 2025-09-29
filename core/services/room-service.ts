@@ -55,7 +55,7 @@ export class RoomService {
         creator_id: creatorId,
         code: code,
         status: RoomStatus.WAITING_PARTICIPANT,
-        tags: data.tags || []
+        tags: []
       })
       .select()
       .single();
