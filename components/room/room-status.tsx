@@ -83,6 +83,32 @@ const STEP_ORDER: RoomStatus[] = [
   RoomStatus.COMPLETED
 ];
 
+function getStatusVariant(status: RoomStatus): 'default' | 'primary' | 'success' | 'warning' | 'error' {
+  switch (status) {
+    case RoomStatus.WAITING_PARTICIPANT:
+      return 'primary';
+    case RoomStatus.AGENDA_NEGOTIATION:
+    case RoomStatus.ARGUMENTS_SUBMISSION:
+    case RoomStatus.AI_PROCESSING:
+      return 'warning';
+    case RoomStatus.COMPLETED:
+      return 'success';
+    case RoomStatus.CANCELLED:
+      return 'error';
+    default:
+      return 'default';
+  }
+}
+
+function getStatusInfo(status: RoomStatus) {
+  return STATUS_CONFIG[status] || {
+    icon: ExclamationTriangleIcon,
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-50',
+    description: '알 수 없는 상태'
+  };
+}
+
 export default function RoomStatusComponent({ 
   room, 
   onRefresh, 
@@ -161,7 +187,9 @@ export default function RoomStatusComponent({
               <h3 className="text-lg font-semibold text-gray-900">
                 {MESSAGES.ROOM.CURRENT_STATUS}
               </h3>
-              <Badge status={room.status} />
+              <Badge variant={getStatusVariant(room.status)}>
+                {getStatusInfo(room.status).description}
+              </Badge>
             </div>
           </div>
           
