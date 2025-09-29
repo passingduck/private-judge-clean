@@ -341,7 +341,7 @@ export class DebateService {
    */
   async createJudgeDecision(
     sessionId: string,
-    decision: JudgeDecision
+    decision: any
   ): Promise<Verdict> {
     const decisionData = {
       session_id: sessionId,
