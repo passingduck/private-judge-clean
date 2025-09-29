@@ -326,7 +326,7 @@ export class RoomService {
   /**
    * 방 멤버 목록을 조회합니다.
    */
-  async getRoomMembers(roomId: string): Promise<RoomMember[]> {
+  async getRoomMembers(roomId: string): Promise<any[]> {
     const { data, error } = await this.supabase
       .from('room_members')
       .select(`
