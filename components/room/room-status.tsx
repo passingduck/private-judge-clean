@@ -101,7 +101,7 @@ function getStatusVariant(status: RoomStatus): 'default' | 'primary' | 'success'
 }
 
 function getStatusInfo(status: RoomStatus) {
-  return statusConfig[status] || {
+  return STATUS_INFO[status] || {
     icon: ExclamationTriangleIcon,
     color: 'text-gray-600',
     bgColor: 'bg-gray-50',
