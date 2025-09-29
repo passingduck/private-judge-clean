@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '@/data/supabase/client';
+import { getSupabaseClient } from '@/data/supabase/client';
 import { 
   Job, 
   JobModel, 
@@ -23,7 +23,7 @@ export interface JobExecutionResult {
 }
 
 export class JobService {
-  private supabase = createSupabaseServerClient();
+  private supabase = getSupabaseClient(true); // service role
 
   /**
    * 새로운 작업을 생성합니다.
