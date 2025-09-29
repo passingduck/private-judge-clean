@@ -91,7 +91,7 @@ export default function RoomCreate({
       if (err.name === 'ZodError') {
         setError(
           err.errors.map((e: any) => e.message).join(', ') ||
-            MESSAGES.COMMON.INVALID_INPUT
+            '유효하지 않은 입력입니다'
         );
       } else {
         setError(err.message || MESSAGES.COMMON.SERVER_ERROR);
