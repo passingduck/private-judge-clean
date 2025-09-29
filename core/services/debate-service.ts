@@ -206,10 +206,10 @@ export class DebateService {
     const rounds = sessionData.rounds || [];
     
     // 현재 라운드 및 턴 찾기
-    const currentRound = rounds.find(round => round.status === 'in_progress') || 
+    const currentRound = rounds.find((round: any) => round.status === 'in_progress') || 
                         rounds[rounds.length - 1];
     
-    const currentTurn = currentRound?.turns?.find(turn => turn.status === 'in_progress') ||
+    const currentTurn = currentRound?.turns?.find((turn: any) => turn.status === 'in_progress') ||
                        currentRound?.turns?.[currentRound.turns.length - 1];
 
     // 판결 조회
