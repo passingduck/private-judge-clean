@@ -1,7 +1,7 @@
 import { 
-  parseLLMResponse,
-  type LLMRole 
-} from '@/core/llm/schemas';
+  parseLLMResponse
+} from '@/core/llm/parser';
+import { type LLMRole } from '@/core/llm/schemas';
 import { Argument } from '@/core/models/argument';
 import { Motion } from '@/core/models/motion';
 // DebateRound and DebateTurn types will be defined inline
