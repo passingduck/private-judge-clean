@@ -1,5 +1,5 @@
 import { 
-  validateLLMResponse,
+  parseLLMResponse,
   type LLMRole 
 } from '@/core/llm/schemas';
 import { Argument } from '@/core/models/argument';
@@ -99,7 +99,7 @@ export class AIService {
 
     const response = await this.callOpenAI(prompt, requestId);
     
-    return validateLLMResponse(response, 'lawyer', { requestId });
+    return parseLLMResponse(response, 'lawyer', { requestId });
   }
 
   /**
@@ -130,7 +130,7 @@ export class AIService {
 
     const response = await this.callOpenAI(prompt, requestId);
     
-    return validateLLMResponse(response, 'judge', { requestId });
+    return parseLLMResponse(response, 'judge', { requestId });
   }
 
   /**
@@ -160,7 +160,7 @@ export class AIService {
 
     const response = await this.callOpenAI(prompt, requestId);
     
-    return validateLLMResponse(response, 'juror', { requestId });
+    return parseLLMResponse(response, 'juror', { requestId });
   }
 
   /**
@@ -188,7 +188,7 @@ export class AIService {
 
     const response = await this.callOpenAI(prompt, requestId);
     
-    return validateLLMResponse(response, 'judge', { requestId }); // Final report uses judge validation
+    return parseLLMResponse(response, 'judge', { requestId }); // Final report uses judge validation
   }
 
   /**
