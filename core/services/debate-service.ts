@@ -1,8 +1,7 @@
 import { getSupabaseClient } from '@/data/supabase/client';
 import { 
   DebateSession, 
-  DebateSessionModel,
-  DebateStatus 
+  DebateSessionModel
 } from '@/core/models/debate-session';
 
 // 인라인 타입 정의
