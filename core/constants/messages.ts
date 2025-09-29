@@ -16,7 +16,9 @@ export const MESSAGES = {
     NEXT: '다음',
     SUBMIT: '제출',
     RETRY: '다시 시도',
-    CLOSE: '닫기'
+    CLOSE: '닫기',
+    INVALID_INPUT: '유효하지 않은 입력입니다',
+    ERROR_OCCURRED: '오류가 발생했습니다'
   },
 
   // 인증 관련
@@ -46,7 +48,21 @@ export const MESSAGES = {
     CREATED_SUCCESS: '토론방이 생성되었습니다',
     JOINED_SUCCESS: '토론에 참여했습니다',
     WAITING_PARTICIPANT: '상대방의 참여를 기다리고 있습니다',
-    SHARE_CODE: '이 코드를 상대방에게 공유하세요'
+    SHARE_CODE: '이 코드를 상대방에게 공유하세요',
+    CURRENT_STATUS: '현재 상태',
+    DEBATE_PROGRESS: '토론 진행 상황'
+  },
+
+  // 방 생성 관련
+  CREATE_ROOM: {
+    TITLE: '새 토론방 만들기',
+    ROOM_TITLE_LABEL: '토론 제목',
+    ROOM_TITLE_PLACEHOLDER: '토론 주제를 입력하세요',
+    ROOM_DESCRIPTION_LABEL: '토론 설명',
+    ROOM_DESCRIPTION_PLACEHOLDER: '토론 배경과 쟁점을 설명하세요',
+    TAGS_LABEL: '태그',
+    ADD_TAG_PLACEHOLDER: '태그를 입력하세요',
+    SUBMIT_BUTTON: '토론방 생성'
   },
 
   // 안건 관련

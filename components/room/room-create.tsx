@@ -91,7 +91,7 @@ export default function RoomCreate({
       if (err.name === 'ZodError') {
         setError(
           err.errors.map((e: any) => e.message).join(', ') ||
-            '유효하지 않은 입력입니다'
+            MESSAGES.COMMON.INVALID_INPUT
         );
       } else {
         setError(err.message || MESSAGES.COMMON.SERVER_ERROR);
@@ -113,7 +113,7 @@ export default function RoomCreate({
     <div className={`bg-white rounded-lg shadow-md ${className}`}>
       <div className="p-6 border-b border-gray-200">
         <h2 className="text-2xl font-bold text-gray-900">
-          새 토론방 만들기
+          {MESSAGES.CREATE_ROOM.TITLE}
         </h2>
         <p className="mt-1 text-sm text-gray-600">
           새로운 토론방을 생성하여 다른 사용자와 토론을 시작하세요.
@@ -126,7 +126,7 @@ export default function RoomCreate({
             className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
             role="alert"
           >
-            <strong className="font-bold">오류가 발생했습니다:</strong>
+            <strong className="font-bold">{MESSAGES.COMMON.ERROR_OCCURRED}:</strong>
             <span className="block sm:inline ml-2">{error}</span>
           </div>
         )}
@@ -137,7 +137,7 @@ export default function RoomCreate({
             htmlFor="title"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            토론 제목
+            {MESSAGES.CREATE_ROOM.ROOM_TITLE_LABEL}
             <span className="text-red-500 ml-1">*</span>
           </label>
           <input

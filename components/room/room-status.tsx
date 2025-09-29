@@ -13,7 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Room, RoomStatus } from '@/core/models/room';
 import { MESSAGES } from '@/core/constants/messages';
-import Badge from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 import Stepper from '@/components/ui/stepper';
 
 interface RoomStatusProps {

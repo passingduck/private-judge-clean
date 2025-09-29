@@ -1,5 +1,5 @@
 import React from 'react';
-import Badge, { StatusBadge } from './badge';
+import { Badge, StatusBadge } from './badge';
 
 interface TimelineEvent {
   id: string;
