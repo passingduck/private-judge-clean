@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '@/data/supabase/client';
+import { getSupabaseClient } from '@/data/supabase/client';
 import { 
   Room, 
   RoomModel, 
@@ -31,7 +31,7 @@ export interface RoomStatusUpdate {
 }
 
 export class RoomService {
-  private supabase = createSupabaseServerClient();
+  private supabase = getSupabaseClient(true); // service role
 
   /**
    * 새로운 토론방을 생성합니다.
