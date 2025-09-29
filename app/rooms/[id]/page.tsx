@@ -55,13 +55,13 @@ const statusLabels: Record<string, string> = {
   'cancelled': '취소됨'
 };
 
-const statusVariants: Record<string, 'default' | 'primary' | 'success' | 'warning' | 'danger'> = {
+const statusVariants: Record<string, 'default' | 'primary' | 'success' | 'warning' | 'error'> = {
   'waiting_participant': 'primary',
   'agenda_negotiation': 'warning',
   'arguments_submission': 'warning',
   'ai_debate_in_progress': 'primary',
   'completed': 'success',
-  'cancelled': 'danger'
+  'cancelled': 'error'
 };
 
 const stepperSteps = [
