@@ -90,7 +90,7 @@ export class DebateService {
     }
 
     // 양측 주장이 모두 제출되었는지 확인
-    const { data: arguments, error: argsError } = await this.supabase
+    const { data: argumentList, error: argsError } = await this.supabase
       .from('arguments')
       .select('side')
       .eq('room_id', options.roomId);
@@ -99,8 +99,8 @@ export class DebateService {
       throw new Error('주장 확인 중 오류가 발생했습니다');
     }
 
-    const sideACount = arguments?.filter(arg => arg.side === 'A').length || 0;
-    const sideBCount = arguments?.filter(arg => arg.side === 'B').length || 0;
+    const sideACount = argumentList?.filter(arg => arg.side === 'A').length || 0;
+    const sideBCount = argumentList?.filter(arg => arg.side === 'B').length || 0;
 
     if (sideACount === 0 || sideBCount === 0) {
       throw new Error('양측 모두 주장을 제출해야 토론을 시작할 수 있습니다');
