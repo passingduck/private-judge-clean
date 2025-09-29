@@ -36,7 +36,7 @@ export class RoomService {
    * 새로운 토론방을 생성합니다.
    */
   async createRoom(data: CreateRoom, creatorId: string): Promise<Room> {
-    const roomModel = new RoomModel();
+    const roomModel = new RoomModel({} as Room);
     const validation = RoomModel.validateCreate(data);
     
     if (!validation.success) {
@@ -169,7 +169,7 @@ export class RoomService {
 
     // 사용자 권한 확인 (필요한 경우)
     if (userId) {
-      const roomModel = new RoomModel();
+      const roomModel = new RoomModel({} as Room);
       const hasAccess = roomModel.canUserAccess(data, userId);
       if (!hasAccess) {
         throw new Error('방에 접근할 권한이 없습니다');
