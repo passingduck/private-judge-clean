@@ -142,7 +142,7 @@ export async function verifyJWT(token: string): Promise<JWTPayload> {
       audience: 'authenticated'
     });
 
-    return payload as JWTPayload;
+    return payload as any;
   } catch (error) {
     console.error('[auth] JWT verification failed:', error);
     throw new AuthError('Invalid or expired token', 'INVALID_JWT', 401);
