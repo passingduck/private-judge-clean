@@ -12,7 +12,7 @@ import {
   SpeakerXMarkIcon
 } from '@heroicons/react/24/outline';
 import { MESSAGES } from '@/core/constants/messages';
-import Badge from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 
 interface DebateRound {
   id: string;
