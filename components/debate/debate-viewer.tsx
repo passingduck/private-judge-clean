@@ -254,7 +254,9 @@ export default function DebateViewer({
             <ChatBubbleLeftRightIcon className="h-8 w-8 text-primary-accent" />
             <div>
               <h2 className="text-xl font-bold text-gray-900">AI 토론 뷰어</h2>
-              <Badge status={session.status} />
+              <Badge variant={session.status === 'completed' ? 'success' : session.status === 'in_progress' ? 'primary' : 'default'}>
+                {session.status}
+              </Badge>
             </div>
           </div>
           
