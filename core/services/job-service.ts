@@ -36,7 +36,7 @@ export class JobService {
 
     const jobData = {
       ...validation.data,
-      status: JobStatus.PENDING,
+      status: JobStatus.QUEUED,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
