@@ -265,7 +265,7 @@ export default function RoomStatusComponent({
               label: STATUS_INFO[status]?.description || status,
               status: status === room.status ? 'current' : 
                      STEP_ORDER.indexOf(status) < currentStepIndex ? 'completed' : 
-                     room.status === RoomStatus.CANCELLED ? 'failed' : 'pending'
+                     room.status === RoomStatus.CANCELLED ? 'error' : 'pending'
             }))}
           />
         </div>
