@@ -100,7 +100,7 @@ export async function parseAndValidateLLMResponse<T>(
 
     // 부분 검증 시도 (전체 검증이 실패한 경우)
     if (!allowPartial) {
-      const partialResult = validatePartialLLMResponse(schema, jsonParseResult.data, role);
+      const partialResult = validatePartialLLMResponse(schema as any, jsonParseResult.data, role);
       if (partialResult.success && hasMinimumRequiredFields(partialResult.data, role)) {
         console.info('[llm-parser] partial validation success', { 
           requestId, 
