@@ -491,7 +491,7 @@ export class JobService {
         case JobStatus.RUNNING:
           stats.running++;
           break;
-        case JobStatus.COMPLETED:
+        case JobStatus.SUCCEEDED:
           stats.completed++;
           if (job.started_at && job.completed_at) {
             const executionTime = new Date(job.completed_at).getTime() - new Date(job.started_at).getTime();
