@@ -148,7 +148,7 @@ export function validateLLMResponse<T>(
             issues: error.issues.map(issue => ({
               path: issue.path.join('.'),
               message: issue.message,
-              received: issue.received
+              received: (issue as any).received || undefined
             }))
           }
         }
