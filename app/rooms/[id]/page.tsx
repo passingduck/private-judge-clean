@@ -65,11 +65,11 @@ const statusVariants: Record<string, 'default' | 'primary' | 'success' | 'warnin
 };
 
 const stepperSteps = [
-  { id: 'waiting_participant', label: '참가자 대기' },
-  { id: 'agenda_negotiation', label: '안건 협상' },
-  { id: 'arguments_submission', label: '주장 제출' },
-  { id: 'ai_debate_in_progress', label: 'AI 토론' },
-  { id: 'completed', label: '완료' }
+  { id: 'waiting_participant', label: '참가자 대기', title: '참가자 대기' },
+  { id: 'agenda_negotiation', label: '안건 협상', title: '안건 협상' },
+  { id: 'arguments_submission', label: '주장 제출', title: '주장 제출' },
+  { id: 'ai_debate_in_progress', label: 'AI 토론', title: 'AI 토론' },
+  { id: 'completed', label: '완료', title: '완료' }
 ];
 
 export default function RoomDetailPage() {
