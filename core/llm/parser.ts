@@ -75,8 +75,8 @@ export async function parseAndValidateLLMResponse<T>(
     // 2단계: 스키마 검증
     const schema = LLMSchemas[role];
     const validationResult = allowPartial
-      ? validatePartialLLMResponse(schema, jsonParseResult.data, role)
-      : validateLLMResponse(schema, jsonParseResult.data, role);
+      ? validatePartialLLMResponse(schema as any, jsonParseResult.data, role)
+      : validateLLMResponse(schema as any, jsonParseResult.data, role);
 
     if (validationResult.success) {
       console.info('[llm-parser] success', { 
