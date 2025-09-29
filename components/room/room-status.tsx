@@ -258,7 +258,6 @@ export default function RoomStatusComponent({
             {MESSAGES.ROOM.DEBATE_PROGRESS}
           </h4>
           <Stepper 
-            currentStep={currentStepIndex}
             steps={STEP_ORDER.map((status, index) => ({
               id: status,
               title: STATUS_INFO[status]?.description || status,
