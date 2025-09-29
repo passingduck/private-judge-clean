@@ -137,7 +137,7 @@ export default function RoomCreate({
             htmlFor="title"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            {MESSAGES.CREATE_ROOM.ROOM_TITLE_LABEL}
+            토론 제목
             <span className="text-red-500 ml-1">*</span>
           </label>
           <input
