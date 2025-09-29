@@ -427,7 +427,7 @@ export default function RoomDetailPage() {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">액션</h2>
               <div className="space-y-3">
-                {room.status === 'waiting_participant' && !user?.is_creator && (
+                {room.status === 'waiting_participant' && (
                   <button
                     onClick={() => setShowJoinModal(true)}
                     disabled={loading}
