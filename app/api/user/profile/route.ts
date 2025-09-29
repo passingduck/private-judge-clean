@@ -172,23 +172,18 @@ export async function PATCH(request: NextRequest) {
       bodyKeys: Object.keys(body)
     });
 
-    // 업데이트 데이터 검증
-    const updateValidation = UpdateUser.safeParse(body);
-    if (!updateValidation.success) {
-      console.warn(
-        `[${requestId}] Invalid update data:`,
-        updateValidation.error.errors
-      );
+    // 업데이트 데이터 검증 (간단한 검증)
+    if (!body || typeof body !== 'object') {
+      console.warn(`[${requestId}] Invalid update data:`, body);
       return NextResponse.json(
         {
-          message: MESSAGES.COMMON.INVALID_INPUT,
-          errors: updateValidation.error.errors,
+          message: '유효하지 않은 데이터입니다',
         },
         { status: 400 }
       );
     }
 
-    const updateData = updateValidation.data;
+    const updateData = body;
 
     // 추가 검증
     if (updateData.display_name && updateData.display_name.length > 50) {
