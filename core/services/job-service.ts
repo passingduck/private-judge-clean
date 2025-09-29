@@ -227,7 +227,7 @@ export class JobService {
     const { data, error } = await this.supabase
       .from('jobs')
       .update({
-        status: JobStatus.COMPLETED,
+        status: JobStatus.SUCCEEDED,
         result: result,
         completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
