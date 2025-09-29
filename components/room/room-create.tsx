@@ -59,7 +59,9 @@ export default function RoomCreate({
 
     try {
       // 클라이언트 측 유효성 검사
-      const roomData = CreateRoom.parse(formData);
+      if (!formData.title || !formData.description) {
+        throw new Error('제목과 설명을 모두 입력해주세요.');
+      }
 
       const response = await fetch('/api/rooms', {
         method: 'POST',
