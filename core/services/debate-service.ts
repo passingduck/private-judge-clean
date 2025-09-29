@@ -551,7 +551,7 @@ export class DebateService {
         status: JobStatus.CANCELLED,
         updated_at: new Date().toISOString()
       })
-      .eq('room_id', session.room_id)
+      .eq('room_id', (session as any).room_id)
       .eq('type', JobType.AI_DEBATE);
 
     // 방 상태를 주장 제출로 되돌림
