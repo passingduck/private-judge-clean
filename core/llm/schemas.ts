@@ -174,7 +174,7 @@ export function validatePartialLLMResponse<T>(
 ): ValidationResult<Partial<T>> {
   try {
     // 부분 스키마로 변환
-    const partialSchema = schema.partial();
+    const partialSchema = (schema as any).partial();
     const validatedData = partialSchema.parse(data);
     return {
       success: true,
