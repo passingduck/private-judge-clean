@@ -418,7 +418,9 @@ export default function VerdictDisplay({
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium text-gray-900">배심원 #{index + 1}</span>
                     <div className="flex items-center space-x-2">
-                      <Badge status={vote.winner_side === 'A' ? 'primary' : vote.winner_side === 'B' ? 'success' : 'warning'} />
+                      <Badge variant={vote.winner_side === 'A' ? 'primary' : vote.winner_side === 'B' ? 'success' : 'warning'}>
+                        {vote.winner_side === 'A' ? 'A측 승리' : vote.winner_side === 'B' ? 'B측 승리' : '무승부'}
+                      </Badge>
                       <div className="flex items-center space-x-1">
                         <StarIcon className="h-4 w-4 text-yellow-500" />
                         <span className="text-sm text-gray-600">{vote.confidence}/10</span>
