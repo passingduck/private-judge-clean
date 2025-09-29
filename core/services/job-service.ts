@@ -183,7 +183,7 @@ export class JobService {
     }
 
     const jobModel = new JobModel(job);
-    if (!jobModel.canStart()) {
+    if (job.status !== JobStatus.QUEUED) {
       throw new Error(`작업을 시작할 수 없습니다. 현재 상태: ${job.status}`);
     }
 
