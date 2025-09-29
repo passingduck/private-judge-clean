@@ -72,13 +72,6 @@ const STATUS_INFO: Record<RoomStatus, StatusInfo> = {
     color: 'text-red-600',
     bgColor: 'bg-red-50',
     description: '토론이 취소되었습니다',
-  },
-  [RoomStatus.AI_PROCESSING]: {
-    icon: ArrowPathIcon,
-    color: 'text-indigo-600',
-    bgColor: 'bg-indigo-50',
-    description: 'AI가 처리 중입니다',
-    nextAction: 'AI 시스템이 작업을 수행'
   }
 };
 
