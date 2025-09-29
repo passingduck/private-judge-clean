@@ -169,7 +169,7 @@ export default function RoomDetailPage() {
   const getStepStatus = (stepIndex: number, currentIndex: number) => {
     if (stepIndex < currentIndex) return 'completed';
     if (stepIndex === currentIndex) return 'current';
-    return 'upcoming';
+    return 'pending';
   };
 
   const formatDate = (dateString: string) => {
