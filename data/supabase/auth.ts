@@ -218,7 +218,7 @@ export async function refreshToken(
 
     return data as Session;
   } catch (error) {
-    console.error('[auth] Token refresh failed', { requestId, error: error.message });
+    console.error('[auth] Token refresh failed', { requestId, error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -236,7 +236,7 @@ export async function signOut(
       }
     }, requestId);
   } catch (error) {
-    console.error('[auth] Sign out failed', { requestId, error: error.message });
+    console.error('[auth] Sign out failed', { requestId, error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -256,7 +256,7 @@ export async function getUser(
 
     return data as User;
   } catch (error) {
-    console.error('[auth] Get user failed', { requestId, error: error.message });
+    console.error('[auth] Get user failed', { requestId, error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -282,7 +282,7 @@ export async function updateUser(
 
     return data as User;
   } catch (error) {
-    console.error('[auth] Update user failed', { requestId, error: error.message });
+    console.error('[auth] Update user failed', { requestId, error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -302,7 +302,7 @@ export async function resetPasswordForEmail(
       })
     }, requestId);
   } catch (error) {
-    console.error('[auth] Password reset failed', { requestId, email, error: error.message });
+    console.error('[auth] Password reset failed', { requestId, email, error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -322,7 +322,7 @@ export async function resendConfirmation(
       })
     }, requestId);
   } catch (error) {
-    console.error('[auth] Resend confirmation failed', { requestId, email, type, error: error.message });
+    console.error('[auth] Resend confirmation failed', { requestId, email, type, error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }

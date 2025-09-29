@@ -4,9 +4,9 @@ import { supabase, supabaseAdmin, Database } from './client';
 type Tables = Database['public']['Tables'];
 type Room = Tables['rooms']['Row'];
 type User = Tables['users']['Row'];
-type Motion = Tables['motions']['Row'];
-type Argument = Tables['arguments']['Row'];
-type Job = Tables['jobs']['Row'];
+// type Motion = Tables['motions']['Row']; // 테이블이 존재하지 않음
+// type Argument = Tables['arguments']['Row']; // 테이블이 존재하지 않음
+// type Job = Tables['jobs']['Row']; // 테이블이 존재하지 않음
 
 // 에러 타입
 export class DatabaseError extends Error {
@@ -183,7 +183,8 @@ export const roomQueries = {
   }
 };
 
-// 안건 관련 쿼리
+// 안건 관련 쿼리 (테이블이 존재하지 않아 주석 처리)
+/*
 export const motionQueries = {
   async getByRoomId(roomId: string): Promise<Motion | null> {
     const { data, error } = await supabase
@@ -231,8 +232,10 @@ export const motionQueries = {
     return data;
   }
 };
+*/
 
-// 주장 관련 쿼리
+// 주장 관련 쿼리 (테이블이 존재하지 않아 주석 처리)
+/*
 export const argumentQueries = {
   async getByRoomId(roomId: string): Promise<Argument[]> {
     const { data, error } = await supabase
@@ -295,8 +298,10 @@ export const argumentQueries = {
     return data;
   }
 };
+*/
 
-// 작업 큐 관련 쿼리 (서비스 롤 전용)
+// 작업 큐 관련 쿼리 (테이블이 존재하지 않아 주석 처리)
+/*
 export const jobQueries = {
   async create(job: Tables['jobs']['Insert']): Promise<Job> {
     const { data, error } = await supabaseAdmin!
@@ -402,28 +407,24 @@ export const jobQueries = {
     return data;
   }
 };
+*/
 
 // 통계 및 집계 쿼리
 export const statsQueries = {
   async getRoomStats(roomId: string) {
-    // 방의 전체 통계 정보 조회
-    const [room, motion, arguments, jobs] = await Promise.all([
-      roomQueries.getById(roomId),
-      motionQueries.getByRoomId(roomId),
-      argumentQueries.getByRoomId(roomId),
-      jobQueries.getByRoomId(roomId)
-    ]);
+    // 방의 전체 통계 정보 조회 (존재하지 않는 테이블들 제거)
+    const room = await roomQueries.getById(roomId);
 
     return {
       room,
-      motion,
-      arguments,
+      motion: null, // 테이블이 존재하지 않음
+      arguments: [], // 테이블이 존재하지 않음
       jobs: {
-        total: jobs.length,
-        pending: jobs.filter(j => j.status === 'queued').length,
-        running: jobs.filter(j => j.status === 'running').length,
-        completed: jobs.filter(j => j.status === 'succeeded').length,
-        failed: jobs.filter(j => j.status === 'failed').length
+        total: 0,
+        pending: 0,
+        running: 0,
+        completed: 0,
+        failed: 0
       }
     };
   },

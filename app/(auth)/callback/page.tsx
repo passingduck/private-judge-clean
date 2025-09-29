@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Layout from '@/components/layout/layout';
 import { MESSAGES } from '@/core/constants/messages';
 
-export default function CallbackPage() {
+function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -136,5 +136,31 @@ export default function CallbackPage() {
         </div>
       </div>
     </Layout>
+  );
+}
+
+export default function CallbackPage() {
+  return (
+    <Suspense fallback={
+      <Layout title="인증 처리" showHeader={false}>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-md w-full space-y-8">
+            <div className="text-center">
+              <h2 className="mt-6 text-3xl font-bold text-gray-900">
+                사적 재판 시스템
+              </h2>
+              <div className="mt-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                <p className="mt-4 text-sm text-gray-600">
+                  로딩 중...
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    }>
+      <CallbackContent />
+    </Suspense>
   );
 }
