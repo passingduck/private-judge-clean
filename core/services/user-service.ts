@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '@/data/supabase/client';
+import { getSupabaseClient } from '@/data/supabase/client';
 import { User, CreateUser, UpdateUser, UserModel, UserUtils } from '@/core/models/user';
 
 export interface UserServiceInterface {
@@ -29,7 +29,7 @@ export interface UserServiceInterface {
 }
 
 export class UserService implements UserServiceInterface {
-  private supabase = createSupabaseServerClient();
+  private supabase = getSupabaseClient(true);
 
   async findById(id: string): Promise<User | null> {
     console.info('[user-service] findById', { userId: id });
