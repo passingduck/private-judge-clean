@@ -389,7 +389,7 @@ export class DebateService {
       vote: vote.vote,
       reasoning: vote.reasoning,
       confidence: vote.confidence,
-      bias_detected: vote.biasDetected || false,
+      bias_detected: (vote as any).biasDetected || false,
       created_at: new Date().toISOString()
     };
 
