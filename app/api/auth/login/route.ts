@@ -75,6 +75,12 @@ export async function POST(request: NextRequest) {
       response.headers.append('Set-Cookie', cookie);
     });
 
+    console.info('[auth/login] cookies set', { 
+      requestId, 
+      cookieCount: cookies.length,
+      cookies: cookies.map(c => c.split(';')[0]) // 쿠키 이름만 로그
+    });
+
     console.info('[auth/login] success', { 
       requestId, 
       userId: session.user.id,
