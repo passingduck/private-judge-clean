@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { signInWithPassword, setSessionCookies, AuthError } from '@/data/supabase/auth';
+import { signInWithPassword, AuthError } from '@/data/supabase/auth';
 
 // POST /api/auth/login
 export async function POST(request: NextRequest) {
@@ -57,35 +56,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Next.js cookies API를 사용하여 쿠키 설정
-    const cookieStore = await cookies();
+    // 쿠키 설정
     const maxAge = session.expires_in || 3600;
+    const isProduction = process.env.NODE_ENV === 'production';
+    const secureFlag = isProduction ? ' Secure;' : '';
 
-    // 쿠키 옵션
-    const cookieOptions = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
-      maxAge,
-      path: '/'
-    };
+    const cookieOptions = `Max-Age=${maxAge}; Path=/; HttpOnly;${secureFlag} SameSite=Lax`;
 
-    cookieStore.set('sb-access-token', session.access_token, cookieOptions);
-    cookieStore.set('sb-refresh-token', session.refresh_token, cookieOptions);
-
-    console.info('[auth/login] cookies set', {
-      requestId,
-      maxAge,
-      secure: cookieOptions.secure
-    });
-
-    console.info('[auth/login] success', {
-      requestId,
-      userId: session.user.id,
-      email: email.substring(0, 5) + '***'
-    });
-
-    return NextResponse.json({
+    // Response 객체 생성
+    const responseData = {
       success: true,
       message: '로그인되었습니다.',
       user: {
@@ -94,7 +73,40 @@ export async function POST(request: NextRequest) {
         display_name: session.user.user_metadata?.display_name || null
       },
       requestId
+    };
+
+    const response = NextResponse.json(responseData);
+
+    // Set-Cookie 헤더 추가 (각 쿠키는 별도의 헤더로)
+    response.cookies.set('sb-access-token', session.access_token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge,
+      path: '/'
     });
+
+    response.cookies.set('sb-refresh-token', session.refresh_token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge,
+      path: '/'
+    });
+
+    console.info('[auth/login] cookies set', {
+      requestId,
+      maxAge,
+      secure: isProduction
+    });
+
+    console.info('[auth/login] success', {
+      requestId,
+      userId: session.user.id,
+      email: email.substring(0, 5) + '***'
+    });
+
+    return response;
 
   } catch (error) {
     console.error('[auth/login] error', { 

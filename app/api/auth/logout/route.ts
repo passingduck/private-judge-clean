@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { signOut, getSessionFromCookies, AuthError } from '@/data/supabase/auth';
+import { signOut, getSessionFromCookies } from '@/data/supabase/auth';
 
 // POST /api/auth/logout
 export async function POST(request: NextRequest) {
@@ -29,18 +28,33 @@ export async function POST(request: NextRequest) {
       console.info('[auth/logout] no active session found', { requestId });
     }
 
-    // Next.js cookies API를 사용하여 쿠키 삭제
-    const cookieStore = await cookies();
-    cookieStore.delete('sb-access-token');
-    cookieStore.delete('sb-refresh-token');
-
-    console.info('[auth/logout] success', { requestId });
-
-    return NextResponse.json({
+    // NextResponse를 사용하여 쿠키 삭제
+    const response = NextResponse.json({
       success: true,
       message: '로그아웃되었습니다.',
       requestId
     });
+
+    // 쿠키 삭제 (maxAge: 0으로 설정)
+    response.cookies.set('sb-access-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/'
+    });
+
+    response.cookies.set('sb-refresh-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/'
+    });
+
+    console.info('[auth/logout] success', { requestId });
+
+    return response;
 
   } catch (error) {
     console.error('[auth/logout] error', {
@@ -50,15 +64,7 @@ export async function POST(request: NextRequest) {
     });
 
     // 에러가 발생해도 쿠키는 삭제
-    try {
-      const cookieStore = await cookies();
-      cookieStore.delete('sb-access-token');
-      cookieStore.delete('sb-refresh-token');
-    } catch (cookieError) {
-      console.error('[auth/logout] failed to delete cookies', { requestId, error: cookieError });
-    }
-
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: false,
         error: 'LOGOUT_ERROR',
@@ -67,6 +73,25 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
+
+    // 쿠키 삭제
+    response.cookies.set('sb-access-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/'
+    });
+
+    response.cookies.set('sb-refresh-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/'
+    });
+
+    return response;
   }
 }
 
