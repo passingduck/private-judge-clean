@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { getSupabaseClient } from '@/data/supabase/client';
 import { motionQueries } from '@/data/supabase/queries';
-import { MotionModel, MotionAction } from '@/core/models/motion';
+import { MotionModel, MotionAction, MotionStatus } from '@/core/models/motion';
 
 interface RouteParams {
   params: Promise<{
