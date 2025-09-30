@@ -203,6 +203,21 @@ export async function signUpWithPassword(
   }
 }
 
+// OAuth 로그인 URL 생성
+export function getOAuthSignInUrl(
+  provider: 'google' | 'github',
+  redirectTo?: string
+): string {
+  const env = getAuthEnv();
+  const params = new URLSearchParams({
+    provider,
+    flow_type: 'pkce',
+    ...(redirectTo && { redirect_to: redirectTo })
+  });
+
+  return `${env.SUPABASE_URL}/auth/v1/authorize?${params.toString()}`;
+}
+
 // 토큰 새로고침
 export async function refreshToken(
   refreshToken: string,

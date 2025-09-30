@@ -59,6 +59,32 @@ function LoginContent() {
     alert('비밀번호 재설정 기능은 준비 중입니다.');
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      // OAuth callback URL 설정 - 클라이언트 페이지로 리다이렉트
+      const redirectTo = `${window.location.origin}/auth/callback`;
+
+      // Google OAuth 로그인 페이지로 리다이렉트
+      window.location.href = `/api/auth/oauth?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+    } catch (error) {
+      console.error('Google login error:', error);
+      setError('Google 로그인에 실패했습니다.');
+    }
+  };
+
+  const handleGithubLogin = async () => {
+    try {
+      // OAuth callback URL 설정 - 클라이언트 페이지로 리다이렉트
+      const redirectTo = `${window.location.origin}/auth/callback`;
+
+      // GitHub OAuth 로그인 페이지로 리다이렉트
+      window.location.href = `/api/auth/oauth?provider=github&redirect_to=${encodeURIComponent(redirectTo)}`;
+    } catch (error) {
+      console.error('GitHub login error:', error);
+      setError('GitHub 로그인에 실패했습니다.');
+    }
+  };
+
   const isFormValid = formData.email && formData.password;
 
   return (
@@ -194,8 +220,8 @@ function LoginContent() {
           <div className="mt-6 grid grid-cols-2 gap-3">
             <button
               type="button"
-              className="w-full inline-flex justify-center py-3 px-4 border border-gray-200 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors"
-              disabled
+              onClick={handleGoogleLogin}
+              className="w-full inline-flex justify-center py-3 px-4 border border-gray-200 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <span className="sr-only">Google로 로그인</span>
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -209,8 +235,8 @@ function LoginContent() {
 
             <button
               type="button"
-              className="w-full inline-flex justify-center py-3 px-4 border border-gray-200 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors"
-              disabled
+              onClick={handleGithubLogin}
+              className="w-full inline-flex justify-center py-3 px-4 border border-gray-200 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <span className="sr-only">GitHub로 로그인</span>
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -219,10 +245,6 @@ function LoginContent() {
               <span className="ml-2">GitHub</span>
             </button>
           </div>
-          
-          <p className="mt-4 text-center text-xs text-gray-500">
-            소셜 로그인은 곧 지원될 예정입니다
-          </p>
         </div>
       </div>
     </div>

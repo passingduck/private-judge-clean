@@ -4,9 +4,10 @@ import { supabase, supabaseAdmin, Database } from './client';
 type Tables = Database['public']['Tables'];
 type Room = Tables['rooms']['Row'];
 type User = Tables['users']['Row'];
-// type Motion = Tables['motions']['Row']; // 테이블이 존재하지 않음
-// type Argument = Tables['arguments']['Row']; // 테이블이 존재하지 않음
-// type Job = Tables['jobs']['Row']; // 테이블이 존재하지 않음
+type Motion = Tables['motions']['Row'];
+type Argument = Tables['arguments']['Row'];
+type Job = Tables['jobs']['Row'];
+type RoomMember = Tables['room_members']['Row'];
 
 // 에러 타입
 export class DatabaseError extends Error {
@@ -183,8 +184,7 @@ export const roomQueries = {
   }
 };
 
-// 안건 관련 쿼리 (테이블이 존재하지 않아 주석 처리)
-/*
+// 안건 관련 쿼리
 export const motionQueries = {
   async getByRoomId(roomId: string): Promise<Motion | null> {
     const { data, error } = await supabase
@@ -204,7 +204,7 @@ export const motionQueries = {
   },
 
   async create(motion: Tables['motions']['Insert']): Promise<Motion> {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin!
       .from('motions')
       .insert(motion)
       .select()
@@ -218,7 +218,7 @@ export const motionQueries = {
   },
 
   async update(id: string, updates: Tables['motions']['Update']): Promise<Motion> {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin!
       .from('motions')
       .update(updates)
       .eq('id', id)
@@ -232,7 +232,6 @@ export const motionQueries = {
     return data;
   }
 };
-*/
 
 // 주장 관련 쿼리 (테이블이 존재하지 않아 주석 처리)
 /*

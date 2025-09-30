@@ -140,6 +140,96 @@ export type Database = {
           updated_at?: string;
         };
       };
+      motions: {
+        Row: {
+          id: string;
+          room_id: string;
+          title: string;
+          description: string;
+          proposer_id: string;
+          status: 'proposed' | 'under_negotiation' | 'agreed' | 'rejected';
+          negotiation_history: any[];
+          agreed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          room_id: string;
+          title: string;
+          description: string;
+          proposer_id: string;
+          status?: 'proposed' | 'under_negotiation' | 'agreed' | 'rejected';
+          negotiation_history?: any[];
+          agreed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          description?: string;
+          status?: 'proposed' | 'under_negotiation' | 'agreed' | 'rejected';
+          negotiation_history?: any[];
+          agreed_at?: string | null;
+          updated_at?: string;
+        };
+      };
+      arguments: {
+        Row: {
+          id: string;
+          room_id: string;
+          user_id: string;
+          side: 'A' | 'B';
+          title: string;
+          content: string;
+          evidence: any[];
+          submitted_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          room_id: string;
+          user_id: string;
+          side: 'A' | 'B';
+          title: string;
+          content: string;
+          evidence?: any[];
+          submitted_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          content?: string;
+          evidence?: any[];
+          updated_at?: string;
+        };
+      };
+      room_members: {
+        Row: {
+          id: string;
+          room_id: string;
+          user_id: string;
+          role: 'creator' | 'participant';
+          side: 'A' | 'B';
+          joined_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          room_id: string;
+          user_id: string;
+          role: 'creator' | 'participant';
+          side: 'A' | 'B';
+          joined_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          role?: 'creator' | 'participant';
+          side?: 'A' | 'B';
+        };
+      };
     };
   };
 };
