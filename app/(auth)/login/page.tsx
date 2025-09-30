@@ -37,6 +37,7 @@ function LoginContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
+        credentials: 'include', // 쿠키를 포함하도록 명시
       });
 
       if (!response.ok) {
@@ -44,12 +45,11 @@ function LoginContent() {
         throw new Error(errorData.message || '로그인에 실패했습니다.');
       }
 
-      // 성공 시 메인 페이지로 이동
-      router.push('/rooms');
+      // 전체 페이지 리로드를 통한 리다이렉트 (쿠키가 확실히 인식되도록)
+      window.location.href = '/rooms';
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || '서버 오류가 발생했습니다.');
-    } finally {
       setLoading(false);
     }
   };
