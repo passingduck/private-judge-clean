@@ -115,8 +115,10 @@ export async function middleware(request: NextRequest) {
           const response = NextResponse.redirect(loginUrl);
           
           // 만료된 쿠키 삭제
-          response.headers.append('Set-Cookie', 'sb-access-token=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax');
-          response.headers.append('Set-Cookie', 'sb-refresh-token=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax');
+          const isProduction = process.env.NODE_ENV === 'production';
+          const secureFlag = isProduction ? 'Secure;' : '';
+          response.headers.append(`Set-Cookie`, `sb-access-token=; Max-Age=0; Path=/; HttpOnly; ${secureFlag} SameSite=Lax`);
+          response.headers.append(`Set-Cookie`, `sb-refresh-token=; Max-Age=0; Path=/; HttpOnly; ${secureFlag} SameSite=Lax`);
           
           return response;
         }

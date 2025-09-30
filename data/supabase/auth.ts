@@ -375,7 +375,11 @@ export function setSessionCookies(session: Session): string[] {
   const maxAge = session.expires_in || 3600;
   const expires = new Date(Date.now() + maxAge * 1000);
   
-  const cookieOptions = `Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=${expires.toUTCString()}`;
+  // 개발 환경에서는 Secure 플래그 비활성화
+  const isProduction = process.env.NODE_ENV === 'production';
+  const secureFlag = isProduction ? 'Secure;' : '';
+  
+  const cookieOptions = `Max-Age=${maxAge}; Path=/; HttpOnly; ${secureFlag} SameSite=Lax; Expires=${expires.toUTCString()}`;
   
   return [
     `sb-access-token=${encodeURIComponent(session.access_token)}; ${cookieOptions}`,
@@ -385,7 +389,11 @@ export function setSessionCookies(session: Session): string[] {
 
 // 쿠키 삭제
 export function clearSessionCookies(): string[] {
-  const expiredCookieOptions = 'Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  // 개발 환경에서는 Secure 플래그 비활성화
+  const isProduction = process.env.NODE_ENV === 'production';
+  const secureFlag = isProduction ? 'Secure;' : '';
+  
+  const expiredCookieOptions = `Max-Age=0; Path=/; HttpOnly; ${secureFlag} SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT`;
   
   return [
     `sb-access-token=; ${expiredCookieOptions}`,
