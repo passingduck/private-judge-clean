@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { signInWithPassword, setSessionCookies, AuthError } from '@/data/supabase/auth';
 
 // POST /api/auth/login
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
-  
+
   try {
     console.info('[auth/login] start', { requestId });
-    
+
     const body = await request.json();
     const { email, password } = body;
 
@@ -15,11 +16,11 @@ export async function POST(request: NextRequest) {
     if (!email || !password) {
       console.warn('[auth/login] missing credentials', { requestId, hasEmail: !!email });
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'EMAIL_PASSWORD_REQUIRED',
           message: '이메일과 비밀번호를 입력해주세요.',
-          requestId 
+          requestId
         },
         { status: 400 }
       );
@@ -30,11 +31,11 @@ export async function POST(request: NextRequest) {
     if (!emailRegex.test(email)) {
       console.warn('[auth/login] invalid email format', { requestId, email: email.substring(0, 5) + '***' });
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'INVALID_EMAIL_FORMAT',
           message: '올바른 이메일 형식을 입력해주세요.',
-          requestId 
+          requestId
         },
         { status: 400 }
       );
@@ -42,24 +43,49 @@ export async function POST(request: NextRequest) {
 
     // GoTrue REST API를 통한 로그인
     const session = await signInWithPassword(email, password, requestId);
-    
+
     if (!session || !session.access_token) {
       console.error('[auth/login] no session returned', { requestId });
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'LOGIN_FAILED',
           message: '로그인에 실패했습니다.',
-          requestId 
+          requestId
         },
         { status: 401 }
       );
     }
 
-    // 세션 쿠키 설정
-    const cookies = setSessionCookies(session);
-    
-    const response = NextResponse.json({
+    // Next.js cookies API를 사용하여 쿠키 설정
+    const cookieStore = await cookies();
+    const maxAge = session.expires_in || 3600;
+
+    // 쿠키 옵션
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      maxAge,
+      path: '/'
+    };
+
+    cookieStore.set('sb-access-token', session.access_token, cookieOptions);
+    cookieStore.set('sb-refresh-token', session.refresh_token, cookieOptions);
+
+    console.info('[auth/login] cookies set', {
+      requestId,
+      maxAge,
+      secure: cookieOptions.secure
+    });
+
+    console.info('[auth/login] success', {
+      requestId,
+      userId: session.user.id,
+      email: email.substring(0, 5) + '***'
+    });
+
+    return NextResponse.json({
       success: true,
       message: '로그인되었습니다.',
       user: {
@@ -69,25 +95,6 @@ export async function POST(request: NextRequest) {
       },
       requestId
     });
-
-    // 쿠키 헤더 설정
-    cookies.forEach(cookie => {
-      response.headers.append('Set-Cookie', cookie);
-    });
-
-    console.info('[auth/login] cookies set', { 
-      requestId, 
-      cookieCount: cookies.length,
-      cookies: cookies.map(c => c.split(';')[0]) // 쿠키 이름만 로그
-    });
-
-    console.info('[auth/login] success', { 
-      requestId, 
-      userId: session.user.id,
-      email: email.substring(0, 5) + '***'
-    });
-
-    return response;
 
   } catch (error) {
     console.error('[auth/login] error', { 
