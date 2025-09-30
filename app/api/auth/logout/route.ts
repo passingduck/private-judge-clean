@@ -35,22 +35,16 @@ export async function POST(request: NextRequest) {
       requestId
     });
 
-    // 쿠키 삭제 (maxAge: 0으로 설정)
-    response.cookies.set('sb-access-token', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 0,
-      path: '/'
-    });
+    // 쿠키 삭제 문자열 직접 생성
+    const isProduction = process.env.NODE_ENV === 'production';
+    const secureFlag = isProduction ? 'Secure; ' : '';
 
-    response.cookies.set('sb-refresh-token', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 0,
-      path: '/'
-    });
+    const clearAccessTokenCookie = `sb-access-token=; ${secureFlag}HttpOnly; SameSite=Lax; Path=/; Max-Age=0`;
+    const clearRefreshTokenCookie = `sb-refresh-token=; ${secureFlag}HttpOnly; SameSite=Lax; Path=/; Max-Age=0`;
+
+    // 헤더에 직접 추가
+    response.headers.append('Set-Cookie', clearAccessTokenCookie);
+    response.headers.append('Set-Cookie', clearRefreshTokenCookie);
 
     console.info('[auth/logout] success', { requestId });
 
@@ -74,22 +68,16 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
 
-    // 쿠키 삭제
-    response.cookies.set('sb-access-token', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 0,
-      path: '/'
-    });
+    // 쿠키 삭제 문자열 직접 생성
+    const isProduction = process.env.NODE_ENV === 'production';
+    const secureFlag = isProduction ? 'Secure; ' : '';
 
-    response.cookies.set('sb-refresh-token', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 0,
-      path: '/'
-    });
+    const clearAccessTokenCookie = `sb-access-token=; ${secureFlag}HttpOnly; SameSite=Lax; Path=/; Max-Age=0`;
+    const clearRefreshTokenCookie = `sb-refresh-token=; ${secureFlag}HttpOnly; SameSite=Lax; Path=/; Max-Age=0`;
+
+    // 헤더에 직접 추가
+    response.headers.append('Set-Cookie', clearAccessTokenCookie);
+    response.headers.append('Set-Cookie', clearRefreshTokenCookie);
 
     return response;
   }

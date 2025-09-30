@@ -59,9 +59,7 @@ export async function POST(request: NextRequest) {
     // 쿠키 설정
     const maxAge = session.expires_in || 3600;
     const isProduction = process.env.NODE_ENV === 'production';
-    const secureFlag = isProduction ? ' Secure;' : '';
-
-    const cookieOptions = `Max-Age=${maxAge}; Path=/; HttpOnly;${secureFlag} SameSite=Lax`;
+    const secureFlag = isProduction ? 'Secure; ' : '';
 
     // Response 객체 생성
     const responseData = {
@@ -77,27 +75,20 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json(responseData);
 
-    // Set-Cookie 헤더 추가 (각 쿠키는 별도의 헤더로)
-    response.cookies.set('sb-access-token', session.access_token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'lax',
-      maxAge,
-      path: '/'
-    });
+    // 쿠키 문자열 직접 생성 (더 확실한 방법)
+    const accessTokenCookie = `sb-access-token=${encodeURIComponent(session.access_token)}; ${secureFlag}HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
+    const refreshTokenCookie = `sb-refresh-token=${encodeURIComponent(session.refresh_token)}; ${secureFlag}HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
 
-    response.cookies.set('sb-refresh-token', session.refresh_token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'lax',
-      maxAge,
-      path: '/'
-    });
+    // 헤더에 직접 추가
+    response.headers.append('Set-Cookie', accessTokenCookie);
+    response.headers.append('Set-Cookie', refreshTokenCookie);
 
     console.info('[auth/login] cookies set', {
       requestId,
       maxAge,
-      secure: isProduction
+      secure: isProduction,
+      accessTokenLength: session.access_token.length,
+      refreshTokenLength: session.refresh_token.length
     });
 
     console.info('[auth/login] success', {
