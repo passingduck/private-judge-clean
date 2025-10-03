@@ -43,8 +43,8 @@ export const RoomSchema = z.object({
     .nullable(),
   is_private: z.boolean().default(false).optional(),
   status: z.nativeEnum(RoomStatus),
-  created_at: z.string().datetime('유효하지 않은 생성일 형식입니다'),
-  updated_at: z.string().datetime('유효하지 않은 수정일 형식입니다')
+  created_at: z.string(),
+  updated_at: z.string()
 });
 
 // 방 생성 스키마
