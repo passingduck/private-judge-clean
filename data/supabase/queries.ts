@@ -187,12 +187,9 @@ export const roomQueries = {
 // 안건 관련 쿼리
 export const motionQueries = {
   async getByRoomId(roomId: string): Promise<Motion | null> {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin!
       .from('motions')
-      .select(`
-        *,
-        proposer:users!motions_proposer_id_fkey(id, display_name)
-      `)
+      .select('*')
       .eq('room_id', roomId)
       .single();
 
