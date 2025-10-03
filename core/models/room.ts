@@ -41,6 +41,7 @@ export const RoomSchema = z.object({
   description: z.string()
     .max(1000, '방 설명은 최대 1000자까지 허용됩니다')
     .nullable(),
+  is_private: z.boolean().default(false).optional(),
   status: z.nativeEnum(RoomStatus),
   created_at: z.string().datetime('유효하지 않은 생성일 형식입니다'),
   updated_at: z.string().datetime('유효하지 않은 수정일 형식입니다')
@@ -53,7 +54,8 @@ export const CreateRoomSchema = z.object({
     .max(200, '방 제목은 최대 200자까지 허용됩니다'),
   description: z.string()
     .max(1000, '방 설명은 최대 1000자까지 허용됩니다')
-    .optional()
+    .optional(),
+  is_private: z.boolean().default(false).optional()
 });
 
 // 방 업데이트 스키마
@@ -176,6 +178,10 @@ export class RoomModel {
 
   get updatedAt(): Date {
     return new Date(this.data.updated_at);
+  }
+
+  get isPrivate(): boolean {
+    return this.data.is_private ?? false;
   }
 
   // 상태 확인 메서드들
@@ -415,6 +421,8 @@ export const RoomUtils = {
     creatorId?: string;
     participantId?: string;
     hasParticipant?: boolean;
+    isPrivate?: boolean;
+    userId?: string; // For filtering accessible rooms
   }): Room[] {
     return rooms.filter(room => {
       if (filters.status && !filters.status.includes(room.status)) {
@@ -442,6 +450,18 @@ export const RoomUtils = {
       if (filters.hasParticipant !== undefined) {
         const hasParticipant = !!room.participant_id;
         if (hasParticipant !== filters.hasParticipant) {
+          return false;
+        }
+      }
+
+      if (filters.isPrivate !== undefined && room.is_private !== filters.isPrivate) {
+        return false;
+      }
+
+      // Filter out private rooms unless user is a member
+      if (filters.userId && room.is_private) {
+        const isMember = room.creator_id === filters.userId || room.participant_id === filters.userId;
+        if (!isMember) {
           return false;
         }
       }

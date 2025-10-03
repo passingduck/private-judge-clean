@@ -195,6 +195,7 @@ export async function GET(request: NextRequest) {
     // 쿼리 파라미터 파싱
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
+    const includePrivate = searchParams.get('includePrivate') === 'true';
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 

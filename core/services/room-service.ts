@@ -15,6 +15,8 @@ export interface RoomListOptions {
   search?: string;
   limit?: number;
   offset?: number;
+  includePrivate?: boolean;
+  userId?: string; // For filtering accessible private rooms
 }
 
 export interface RoomJoinOptions {
@@ -54,6 +56,7 @@ export class RoomService {
         description: data.description,
         creator_id: creatorId,
         code: code,
+        is_private: data.is_private || false,
         status: RoomStatus.WAITING_PARTICIPANT,
         tags: []
       })
@@ -118,6 +121,16 @@ export class RoomService {
 
     if (options.search) {
       query = query.or(`title.ilike.%${options.search}%,description.ilike.%${options.search}%`);
+    }
+
+    // 비공개 방 필터링 (includePrivate가 false이면 공개 방만)
+    if (!options.includePrivate) {
+      // 공개 방 또는 사용자가 멤버인 방만 조회
+      if (options.userId) {
+        query = query.or(`is_private.eq.false,and(is_private.eq.true,or(creator_id.eq.${options.userId},participant_id.eq.${options.userId}))`);
+      } else {
+        query = query.eq('is_private', false);
+      }
     }
 
     // 정렬 및 페이징

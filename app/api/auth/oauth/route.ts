@@ -23,9 +23,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.info('[auth/oauth] provider', { requestId, provider, redirectTo });
+    // redirect_to가 없으면 환경 변수 사용
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL;
+    const finalRedirectTo = redirectTo || (siteUrl ? `${siteUrl}/auth/callback` : undefined);
 
-    const oauthUrl = getOAuthSignInUrl(provider, redirectTo || undefined);
+    console.info('[auth/oauth] provider', {
+      requestId,
+      provider,
+      redirectTo: finalRedirectTo,
+      env_NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+      env_NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL
+    });
+
+    const oauthUrl = getOAuthSignInUrl(provider, finalRedirectTo);
 
     console.info('[auth/oauth] redirecting', { requestId, provider });
 

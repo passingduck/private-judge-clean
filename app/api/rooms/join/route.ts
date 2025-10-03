@@ -110,17 +110,24 @@ export async function POST(request: NextRequest) {
     }
 
     // 방 데이터 검증
+    console.info('[rooms-join-api] POST room data before validation', {
+      requestId,
+      roomData: JSON.stringify(roomData)
+    });
     const roomValidation = RoomModel.validate(roomData);
     if (!roomValidation.success) {
-      console.error('[rooms-join-api] POST room validation failed', { 
-        requestId, 
-        error: roomValidation.error 
+      console.error('[rooms-join-api] POST room validation failed', {
+        requestId,
+        roomData: JSON.stringify(roomData),
+        error: roomValidation.error,
+        errorDetails: JSON.stringify(roomValidation.error)
       });
       return NextResponse.json(
-        { 
-          error: 'data_error', 
+        {
+          error: 'data_error',
           message: '방 데이터가 유효하지 않습니다',
-          requestId 
+          details: roomValidation.error,
+          requestId
         },
         { status: 500 }
       );

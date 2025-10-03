@@ -51,8 +51,7 @@ export default function CreateRoomPage() {
         },
         body: JSON.stringify({
           title: form.title.trim(),
-          description: form.description.trim(),
-          tags: form.tags
+          description: form.description.trim()
         }),
       });
 

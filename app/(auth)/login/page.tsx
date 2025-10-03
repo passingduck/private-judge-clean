@@ -46,7 +46,7 @@ function LoginContent() {
       }
 
       // 전체 페이지 리로드를 통한 리다이렉트 (쿠키가 확실히 인식되도록)
-      window.location.href = '/rooms';
+      window.location.href = '/dashboard';
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || '서버 오류가 발생했습니다.');
@@ -61,11 +61,8 @@ function LoginContent() {
 
   const handleGoogleLogin = async () => {
     try {
-      // OAuth callback URL 설정 - 클라이언트 페이지로 리다이렉트
-      const redirectTo = `${window.location.origin}/auth/callback`;
-
-      // Google OAuth 로그인 페이지로 리다이렉트
-      window.location.href = `/api/auth/oauth?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`;
+      // Google OAuth 로그인 페이지로 리다이렉트 (서버에서 자동으로 redirect_to 설정)
+      window.location.href = `/api/auth/oauth?provider=google`;
     } catch (error) {
       console.error('Google login error:', error);
       setError('Google 로그인에 실패했습니다.');
@@ -74,11 +71,8 @@ function LoginContent() {
 
   const handleGithubLogin = async () => {
     try {
-      // OAuth callback URL 설정 - 클라이언트 페이지로 리다이렉트
-      const redirectTo = `${window.location.origin}/auth/callback`;
-
-      // GitHub OAuth 로그인 페이지로 리다이렉트
-      window.location.href = `/api/auth/oauth?provider=github&redirect_to=${encodeURIComponent(redirectTo)}`;
+      // GitHub OAuth 로그인 페이지로 리다이렉트 (서버에서 자동으로 redirect_to 설정)
+      window.location.href = `/api/auth/oauth?provider=github`;
     } catch (error) {
       console.error('GitHub login error:', error);
       setError('GitHub 로그인에 실패했습니다.');

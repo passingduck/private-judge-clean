@@ -209,12 +209,14 @@ export function getOAuthSignInUrl(
   redirectTo?: string
 ): string {
   const env = getAuthEnv();
+
+  // Supabase OAuth URL 생성 (implicit flow - 토큰이 URL hash에 포함됨)
   const params = new URLSearchParams({
     provider,
-    flow_type: 'pkce',
     ...(redirectTo && { redirect_to: redirectTo })
   });
 
+  // Supabase OAuth 엔드포인트
   return `${env.SUPABASE_URL}/auth/v1/authorize?${params.toString()}`;
 }
 
