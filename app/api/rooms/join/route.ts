@@ -240,29 +240,57 @@ export async function POST(request: NextRequest) {
     }
 
     // 방 입장 처리 - participant_id 업데이트 및 상태 변경
-    const { error: updateError } = await supabase
+    const { data: updateData, error: updateError } = await supabase
       .from('rooms')
       .update({
         participant_id: userId,
         status: RoomStatus.AGENDA_NEGOTIATION
       })
       .eq('id', room.id)
-      .is('participant_id', null); // 동시성 제어: participant_id가 null일 때만 업데이트
+      .is('participant_id', null) // 동시성 제어: participant_id가 null일 때만 업데이트
+      .select();
+
+    console.info('[rooms-join-api] POST update result', {
+      requestId,
+      updateData,
+      updateError,
+      hasData: !!updateData,
+      dataLength: updateData?.length
+    });
 
     if (updateError) {
       console.error('[rooms-join-api] POST update room error', {
         requestId,
         error: updateError.message,
-        code: updateError.code
+        code: updateError.code,
+        details: updateError.details,
+        hint: updateError.hint
       });
 
       return NextResponse.json(
         {
           error: 'database_error',
           message: '방 입장 처리 중 오류가 발생했습니다',
+          details: updateError.message,
           requestId
         },
         { status: 500 }
+      );
+    }
+
+    // 업데이트가 실패한 경우 (이미 참가자가 있음)
+    if (!updateData || updateData.length === 0) {
+      console.warn('[rooms-join-api] POST room already has participant', {
+        requestId,
+        roomId: room.id
+      });
+      return NextResponse.json(
+        {
+          error: 'room_full',
+          message: '방이 가득 찼습니다',
+          requestId
+        },
+        { status: 409 }
       );
     }
 
