@@ -31,10 +31,10 @@ const statusLabels: Record<string, string> = {
 };
 
 const actionLabels: Record<string, string> = {
-  'PROPOSED': '제안',
-  'ACCEPTED': '동의',
-  'REJECTED': '거절',
-  'MODIFIED': '수정 제안'
+  'proposed': '제안',
+  'accepted': '동의',
+  'rejected': '거절',
+  'modified': '수정 제안'
 };
 
 export default function MotionPage() {
@@ -55,7 +55,7 @@ export default function MotionPage() {
   const [description, setDescription] = useState('');
 
   // 응답 폼 상태
-  const [responseAction, setResponseAction] = useState<'ACCEPTED' | 'MODIFIED' | 'REJECTED'>('ACCEPTED');
+  const [responseAction, setResponseAction] = useState<'accepted' | 'modified' | 'rejected'>('accepted');
   const [reason, setReason] = useState('');
   const [modTitle, setModTitle] = useState('');
   const [modDescription, setModDescription] = useState('');
@@ -145,7 +145,7 @@ export default function MotionPage() {
         reason: reason.trim() || undefined
       };
 
-      if (responseAction === 'MODIFIED') {
+      if (responseAction === 'modified') {
         payload.modifications = {
           title: modTitle.trim() !== motion?.title ? modTitle.trim() : undefined,
           description: modDescription.trim() !== motion?.description ? modDescription.trim() : undefined
@@ -343,9 +343,9 @@ export default function MotionPage() {
                     <div className="grid grid-cols-3 gap-3">
                       <button
                         type="button"
-                        onClick={() => setResponseAction('ACCEPTED')}
+                        onClick={() => setResponseAction('accepted')}
                         className={`py-3 px-4 rounded-lg border-2 transition-colors ${
-                          responseAction === 'ACCEPTED'
+                          responseAction === 'accepted'
                             ? 'border-green-500 bg-green-50 text-green-700'
                             : 'border-gray-300 text-gray-700 hover:border-gray-400'
                         }`}
@@ -355,9 +355,9 @@ export default function MotionPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setResponseAction('MODIFIED')}
+                        onClick={() => setResponseAction('modified')}
                         className={`py-3 px-4 rounded-lg border-2 transition-colors ${
-                          responseAction === 'MODIFIED'
+                          responseAction === 'modified'
                             ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
                             : 'border-gray-300 text-gray-700 hover:border-gray-400'
                         }`}
@@ -367,9 +367,9 @@ export default function MotionPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setResponseAction('REJECTED')}
+                        onClick={() => setResponseAction('rejected')}
                         className={`py-3 px-4 rounded-lg border-2 transition-colors ${
-                          responseAction === 'REJECTED'
+                          responseAction === 'rejected'
                             ? 'border-red-500 bg-red-50 text-red-700'
                             : 'border-gray-300 text-gray-700 hover:border-gray-400'
                         }`}
@@ -381,7 +381,7 @@ export default function MotionPage() {
                   </div>
 
                   {/* 수정 제안인 경우 수정 내용 입력 */}
-                  {responseAction === 'MODIFIED' && (
+                  {responseAction === 'modified' && (
                     <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
