@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { EvidenceType } from '@/core/models/argument';
 
@@ -27,7 +27,8 @@ interface ArgumentsData {
   can_submit: boolean;
 }
 
-export default function ArgumentsPage({ params }: { params: { id: string } }) {
+export default function ArgumentsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: roomId } = use(params);
   const router = useRouter();
   const [data, setData] = useState<ArgumentsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,7 +54,7 @@ export default function ArgumentsPage({ params }: { params: { id: string } }) {
         return;
       }
 
-      const response = await fetch(`/api/rooms/${params.id}/arguments`, {
+      const response = await fetch(`/api/rooms/${roomId}/arguments`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -118,7 +119,7 @@ export default function ArgumentsPage({ params }: { params: { id: string } }) {
 
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`/api/rooms/${params.id}/arguments`, {
+      const response = await fetch(`/api/rooms/${roomId}/arguments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ export default function ArgumentsPage({ params }: { params: { id: string } }) {
       if (response.ok) {
         alert(result.message || '주장이 제출되었습니다');
         if (result.room_status === 'ai_processing') {
-          router.push(`/rooms/${params.id}`);
+          router.push(`/rooms/${roomId}`);
         } else {
           fetchArguments();
         }
@@ -179,7 +180,7 @@ export default function ArgumentsPage({ params }: { params: { id: string } }) {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">주장 제출</h1>
         <button
-          onClick={() => router.push(`/rooms/${params.id}`)}
+          onClick={() => router.push(`/rooms/${roomId}`)}
           className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
         >
           방으로 돌아가기
@@ -456,7 +457,7 @@ export default function ArgumentsPage({ params }: { params: { id: string } }) {
               </button>
               <button
                 type="button"
-                onClick={() => router.push(`/rooms/${params.id}`)}
+                onClick={() => router.push(`/rooms/${roomId}`)}
                 className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
               >
                 취소
@@ -485,7 +486,7 @@ export default function ArgumentsPage({ params }: { params: { id: string } }) {
             양측 주장이 모두 제출되었습니다. AI 재판이 진행됩니다.
           </p>
           <button
-            onClick={() => router.push(`/rooms/${params.id}`)}
+            onClick={() => router.push(`/rooms/${roomId}`)}
             className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
             방 상태 확인하기

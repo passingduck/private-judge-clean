@@ -5,10 +5,10 @@ import { ArgumentModel, CreateArgumentSchema, ArgumentSide } from '@/core/models
 // GET /api/rooms/[id]/arguments - 사용자와 상대방의 주장 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const roomId = params.id;
+    const { id: roomId } = await params;
 
     // 인증 확인
     const authHeader = request.headers.get('authorization');
@@ -46,7 +46,7 @@ export async function GET(
     const opponentSide = isCreator ? ArgumentSide.B : ArgumentSide.A;
 
     // 주장들 조회 (admin client 사용)
-    const { data: arguments, error: argsError } = await supabaseAdmin!
+    const { data: argumentsData, error: argsError } = await supabaseAdmin!
       .from('arguments')
       .select('*')
       .eq('room_id', roomId);
@@ -57,8 +57,8 @@ export async function GET(
     }
 
     // 사용자와 상대방의 주장 분리
-    const myArgument = arguments?.find(arg => arg.side === userSide) || null;
-    const opponentArgument = arguments?.find(arg => arg.side === opponentSide) || null;
+    const myArgument = argumentsData?.find(arg => arg.side === userSide) || null;
+    const opponentArgument = argumentsData?.find(arg => arg.side === opponentSide) || null;
 
     // 제출 가능 여부 확인
     const canSubmit = roomData.status === 'arguments_submission' && !myArgument;
@@ -82,10 +82,10 @@ export async function GET(
 // POST /api/rooms/[id]/arguments - 주장 제출
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const roomId = params.id;
+    const { id: roomId } = await params;
     const body = await request.json();
 
     // 인증 확인
