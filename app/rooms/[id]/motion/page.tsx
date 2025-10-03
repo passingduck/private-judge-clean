@@ -164,7 +164,7 @@ export default function MotionPage() {
       }
 
       // 동의 시 Arguments 페이지로 이동
-      if (responseAction === 'ACCEPTED') {
+      if (responseAction === 'accepted') {
         router.push(`/rooms/${roomId}`);
       } else {
         // 그 외에는 페이지 새로고침
