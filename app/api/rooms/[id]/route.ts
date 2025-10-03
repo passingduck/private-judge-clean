@@ -47,7 +47,8 @@ export async function GET(
       .from('rooms')
       .select(`
         *,
-        creator:users!rooms_creator_id_fkey(id, display_name, avatar_url)
+        creator:users!rooms_creator_id_fkey(id, display_name, avatar_url),
+        participant:users!rooms_participant_id_fkey(id, display_name, avatar_url)
       `)
       .eq('id', roomId)
       .single();
@@ -103,6 +104,7 @@ export async function GET(
       created_at: roomData?.created_at || new Date().toISOString(),
       updated_at: roomData?.updated_at || new Date().toISOString(),
       creator: roomData?.creator || { id: userId, display_name: 'hersungjin', avatar_url: null },
+      participant: roomData?.participant || null,
       tags: [] // 임시로 빈 배열
     };
 
