@@ -22,7 +22,7 @@ export const NegotiationHistoryItemSchema = z.object({
   user_id: z.string().uuid(),
   changes: z.record(z.any()).optional(),
   reason: z.string().optional(),
-  timestamp: z.string().datetime()
+  timestamp: z.string()
 });
 
 // 기본 안건 스키마
@@ -40,9 +40,9 @@ export const MotionSchema = z.object({
     errorMap: () => ({ message: '유효하지 않은 안건 상태입니다' })
   }),
   negotiation_history: z.array(NegotiationHistoryItemSchema).default([]),
-  agreed_at: z.string().datetime().nullable(),
-  created_at: z.string().datetime('유효하지 않은 생성일 형식입니다'),
-  updated_at: z.string().datetime('유효하지 않은 수정일 형식입니다')
+  agreed_at: z.string().nullable(),
+  created_at: z.string(),
+  updated_at: z.string()
 });
 
 // 안건 생성 스키마
