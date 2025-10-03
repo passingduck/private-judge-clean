@@ -244,8 +244,7 @@ export async function POST(request: NextRequest) {
       .from('rooms')
       .update({
         participant_id: userId,
-        status: RoomStatus.AGENDA_NEGOTIATION,
-        updated_at: new Date().toISOString()
+        status: RoomStatus.AGENDA_NEGOTIATION
       })
       .eq('id', room.id)
       .is('participant_id', null); // 동시성 제어: participant_id가 null일 때만 업데이트
