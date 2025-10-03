@@ -239,38 +239,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 트랜잭션으로 방 입장 처리
-    const { data: updatedRoomData, error: updateError } = await supabase.rpc(
-      'join_room_transaction',
-      {
-        p_room_id: room.id,
-        p_user_id: userId
-      }
-    );
+    // 방 입장 처리 - participant_id 업데이트 및 상태 변경
+    const { error: updateError } = await supabase
+      .from('rooms')
+      .update({
+        participant_id: userId,
+        status: RoomStatus.AGENDA_NEGOTIATION,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', room.id)
+      .is('participant_id', null); // 동시성 제어: participant_id가 null일 때만 업데이트
 
     if (updateError) {
-      console.error('[rooms-join-api] POST join room transaction error', { 
-        requestId, 
-        error: updateError.message 
+      console.error('[rooms-join-api] POST update room error', {
+        requestId,
+        error: updateError.message,
+        code: updateError.code
       });
 
-      // 특정 에러 코드에 따른 처리
-      if (updateError.message.includes('room_full')) {
-        return NextResponse.json(
-          { 
-            error: 'room_full', 
-            message: '방이 가득 찼습니다',
-            requestId 
-          },
-          { status: 409 }
-        );
-      }
-
       return NextResponse.json(
-        { 
-          error: 'database_error', 
+        {
+          error: 'database_error',
           message: '방 입장 처리 중 오류가 발생했습니다',
-          requestId 
+          requestId
         },
         { status: 500 }
       );
