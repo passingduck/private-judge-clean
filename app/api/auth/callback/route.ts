@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { setSessionCookies, AuthError } from '@/data/supabase/auth';
+import { getSupabaseClient } from '@/data/supabase/client';
 
 // GET /api/auth/callback
 // 이메일 확인, 패스워드 재설정 등의 콜백 처리
@@ -73,6 +74,39 @@ export async function GET(request: NextRequest) {
       redirectUrl.searchParams.set('message', '유효하지 않은 토큰입니다.');
       
       return NextResponse.redirect(redirectUrl);
+    }
+
+    // users 테이블에 유저 생성 (없으면)
+    try {
+      const supabase = getSupabaseClient(true);
+      const { error: upsertError } = await supabase
+        .from('users')
+        .upsert({
+          id: user.id,
+          email: user.email,
+          display_name: user.user_metadata?.display_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+          avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null
+        }, {
+          onConflict: 'id'
+        });
+
+      if (upsertError) {
+        console.warn('[auth/callback] GET failed to upsert user', {
+          requestId,
+          userId: user.id,
+          error: upsertError.message
+        });
+      } else {
+        console.info('[auth/callback] GET user upserted', {
+          requestId,
+          userId: user.id
+        });
+      }
+    } catch (dbError) {
+      console.error('[auth/callback] GET unexpected error during user upsert', {
+        requestId,
+        error: dbError instanceof Error ? dbError.message : String(dbError)
+      });
     }
 
     // 세션 객체 구성
@@ -170,6 +204,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // users 테이블에 유저 생성 (없으면)
+    try {
+      const supabase = getSupabaseClient(true);
+      const { error: upsertError } = await supabase
+        .from('users')
+        .upsert({
+          id: user.id,
+          email: user.email,
+          display_name: user.user_metadata?.display_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+          avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null
+        }, {
+          onConflict: 'id'
+        });
+
+      if (upsertError) {
+        console.warn('[auth/callback] POST failed to upsert user', {
+          requestId,
+          userId: user.id,
+          error: upsertError.message
+        });
+      } else {
+        console.info('[auth/callback] POST user upserted', {
+          requestId,
+          userId: user.id
+        });
+      }
+    } catch (dbError) {
+      console.error('[auth/callback] POST unexpected error during user upsert', {
+        requestId,
+        error: dbError instanceof Error ? dbError.message : String(dbError)
+      });
+    }
+
     // 세션 객체 구성
     const session = {
       access_token,
@@ -181,7 +248,7 @@ export async function POST(request: NextRequest) {
 
     // 세션 쿠키 설정
     const cookies = setSessionCookies(session);
-    
+
     const response = NextResponse.json({
       success: true,
       message: '세션이 설정되었습니다.',

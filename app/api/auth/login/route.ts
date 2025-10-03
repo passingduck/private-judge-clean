@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { signInWithPassword, AuthError } from '@/data/supabase/auth';
+import { getSupabaseClient } from '@/data/supabase/client';
 
 // POST /api/auth/login
 export async function POST(request: NextRequest) {
@@ -54,6 +55,40 @@ export async function POST(request: NextRequest) {
         },
         { status: 401 }
       );
+    }
+
+    // users 테이블에 유저 생성 (없으면)
+    try {
+      const supabase = getSupabaseClient(true); // Use service role for DB operations
+      const { error: upsertError } = await supabase
+        .from('users')
+        .upsert({
+          id: session.user.id,
+          email: session.user.email,
+          display_name: session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'User',
+          avatar_url: session.user.user_metadata?.avatar_url || null
+        }, {
+          onConflict: 'id'
+        });
+
+      if (upsertError) {
+        console.warn('[auth/login] failed to upsert user to users table', {
+          requestId,
+          userId: session.user.id,
+          error: upsertError.message
+        });
+      } else {
+        console.info('[auth/login] user upserted to users table', {
+          requestId,
+          userId: session.user.id
+        });
+      }
+    } catch (dbError) {
+      console.error('[auth/login] unexpected error during user upsert', {
+        requestId,
+        error: dbError instanceof Error ? dbError.message : String(dbError)
+      });
+      // Don't fail login if user table upsert fails
     }
 
     // 쿠키 설정
