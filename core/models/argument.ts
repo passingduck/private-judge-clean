@@ -46,9 +46,9 @@ export const ArgumentSchema = z.object({
   evidence: z.array(EvidenceSchema)
     .max(10, '증거는 최대 10개까지 첨부할 수 있습니다')
     .default([]),
-  submitted_at: z.string().datetime('유효하지 않은 제출일 형식입니다'),
-  created_at: z.string().datetime('유효하지 않은 생성일 형식입니다'),
-  updated_at: z.string().datetime('유효하지 않은 수정일 형식입니다')
+  submitted_at: z.string(),
+  created_at: z.string(),
+  updated_at: z.string()
 });
 
 // 주장 생성 스키마
