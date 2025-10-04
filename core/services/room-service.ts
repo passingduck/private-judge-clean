@@ -398,6 +398,52 @@ export class RoomService {
   }
 
   /**
+   * 방에서 나갑니다.
+   */
+  async leaveRoom(roomId: string, userId: string): Promise<void> {
+    // 방 정보 조회
+    const room = await this.getRoomById(roomId);
+    if (!room) {
+      throw new Error('방을 찾을 수 없습니다');
+    }
+
+    // 생성자는 방을 나갈 수 없음
+    if (room.creator_id === userId) {
+      throw new Error('방 생성자는 방을 나갈 수 없습니다. 방을 삭제해주세요.');
+    }
+
+    // 참가자가 아닌 경우
+    if (room.participant_id !== userId) {
+      throw new Error('이 방의 참가자가 아닙니다');
+    }
+
+    // room_members에서 사용자 제거
+    const { error: memberError } = await this.supabase
+      .from('room_members')
+      .delete()
+      .eq('room_id', roomId)
+      .eq('user_id', userId);
+
+    if (memberError) {
+      throw new Error(`방 멤버 제거 실패: ${memberError.message}`);
+    }
+
+    // participant_id를 null로 설정하고 상태를 waiting_participant로 변경
+    const { error: roomError } = await this.supabase
+      .from('rooms')
+      .update({
+        participant_id: null,
+        status: RoomStatus.WAITING_PARTICIPANT,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', roomId);
+
+    if (roomError) {
+      throw new Error(`방 정보 업데이트 실패: ${roomError.message}`);
+    }
+  }
+
+  /**
    * 방 코드의 유효성을 확인합니다.
    */
   async validateRoomCode(roomId: string, code: string): Promise<boolean> {

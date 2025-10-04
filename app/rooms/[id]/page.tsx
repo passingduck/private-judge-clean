@@ -85,6 +85,8 @@ export default function RoomDetailPage() {
   const [joinCode, setJoinCode] = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
+  const [userInfo, setUserInfo] = useState<{ is_creator: boolean; side: string } | null>(null);
+  const [leaveLoading, setLeaveLoading] = useState(false);
 
   useEffect(() => {
     if (roomId) {
@@ -97,7 +99,7 @@ export default function RoomDetailPage() {
     try {
       setLoading(true);
       const response = await fetch(`/api/rooms/${roomId}`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error('존재하지 않는 토론방입니다');
@@ -107,6 +109,7 @@ export default function RoomDetailPage() {
 
       const data = await response.json();
       setRoom(data.room);
+      setUserInfo(data.user);
     } catch (err) {
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다');
     } finally {
@@ -158,6 +161,35 @@ export default function RoomDetailPage() {
       setJoinError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다');
     } finally {
       setJoinLoading(false);
+    }
+  };
+
+  const handleLeaveRoom = async () => {
+    if (!confirm('정말 방에서 나가시겠습니까?')) {
+      return;
+    }
+
+    try {
+      setLeaveLoading(true);
+
+      const response = await fetch(`/api/rooms/${roomId}/leave`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || '방 나가기에 실패했습니다');
+      }
+
+      // 성공 시 토론방 목록으로 이동
+      router.push('/rooms');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다');
+    } finally {
+      setLeaveLoading(false);
     }
   };
 
@@ -437,7 +469,7 @@ export default function RoomDetailPage() {
                     토론 참가하기
                   </button>
                 )}
-                
+
                 {room.status === 'agenda_negotiation' && (
                   <Link
                     href={`/rooms/${room.id}/motion`}
@@ -447,7 +479,7 @@ export default function RoomDetailPage() {
                     안건 관리
                   </Link>
                 )}
-                
+
                 {room.status === 'arguments_submission' && (
                   <Link
                     href={`/rooms/${room.id}/arguments`}
@@ -466,6 +498,18 @@ export default function RoomDetailPage() {
                     <ScaleIcon className="h-4 w-4 mr-2" />
                     토론 보기
                   </Link>
+                )}
+
+                {/* 방 나가기 버튼 - 참가자만 표시 */}
+                {userInfo && !userInfo.is_creator && room.participant && (
+                  <button
+                    onClick={handleLeaveRoom}
+                    disabled={leaveLoading}
+                    className="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors flex items-center justify-center disabled:opacity-50"
+                  >
+                    <XMarkIcon className="h-4 w-4 mr-2" />
+                    {leaveLoading ? '나가는 중...' : '방 나가기'}
+                  </button>
                 )}
               </div>
             </div>
