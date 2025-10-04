@@ -151,13 +151,19 @@ export async function POST(
       console.warn('[debate-start-api] POST no agreed motion', {
         requestId,
         roomId,
-        motionError: motionError?.message
+        motionError: motionError?.message,
+        motionErrorDetails: JSON.stringify(motionError),
+        motionData: motionData
       });
       return NextResponse.json(
         {
           error: 'no_motion',
           message: '합의된 안건이 없습니다',
-          requestId
+          requestId,
+          debug: {
+            motionError: motionError?.message,
+            motionErrorCode: (motionError as any)?.code
+          }
         },
         { status: 409 }
       );
