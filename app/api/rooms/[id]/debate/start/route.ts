@@ -57,38 +57,34 @@ export async function POST(
 
     const supabase = getSupabaseClient(true); // Use service role
 
-    // 방 정보 및 관련 데이터 조회
+    // 방 정보 조회
     const { data: roomData, error: roomError } = await supabase
       .from('rooms')
-      .select(`
-        *,
-        motions(id, title, description, status, agreed_at),
-        arguments(id, user_id, side, title, content, evidence, submitted_at)
-      `)
+      .select('*')
       .eq('id', roomId)
       .single();
 
     if (roomError) {
       if (roomError.code === 'PGRST116') {
         return NextResponse.json(
-          { 
-            error: 'not_found', 
+          {
+            error: 'not_found',
             message: '방을 찾을 수 없습니다',
-            requestId 
+            requestId
           },
           { status: 404 }
         );
       }
 
-      console.error('[debate-start-api] POST room fetch error', { 
-        requestId, 
-        error: roomError.message 
+      console.error('[debate-start-api] POST room fetch error', {
+        requestId,
+        error: roomError.message
       });
       return NextResponse.json(
-        { 
-          error: 'database_error', 
+        {
+          error: 'database_error',
           message: '방 정보 조회 중 오류가 발생했습니다',
-          requestId 
+          requestId
         },
         { status: 500 }
       );
@@ -97,10 +93,10 @@ export async function POST(
     const roomValidation = RoomModel.validate(roomData);
     if (!roomValidation.success) {
       return NextResponse.json(
-        { 
-          error: 'data_error', 
+        {
+          error: 'data_error',
           message: '방 데이터가 유효하지 않습니다',
-          requestId 
+          requestId
         },
         { status: 500 }
       );
@@ -111,16 +107,16 @@ export async function POST(
 
     // 권한 확인 (생성자만 토론 시작 가능)
     if (!roomModel.isCreator(userId)) {
-      console.warn('[debate-start-api] POST not creator', { 
-        requestId, 
-        roomId, 
-        userId 
+      console.warn('[debate-start-api] POST not creator', {
+        requestId,
+        roomId,
+        userId
       });
       return NextResponse.json(
-        { 
-          error: 'forbidden', 
+        {
+          error: 'forbidden',
           message: '방 생성자만 토론을 시작할 수 있습니다',
-          requestId 
+          requestId
         },
         { status: 403 }
       );
@@ -128,42 +124,68 @@ export async function POST(
 
     // 방 상태 확인 (주장 제출 단계여야 함)
     if (room.status !== RoomStatus.ARGUMENTS_SUBMISSION) {
-      console.warn('[debate-start-api] POST invalid room status', { 
-        requestId, 
-        roomId, 
-        status: room.status 
-      });
-      return NextResponse.json(
-        { 
-          error: 'invalid_status', 
-          message: '주장 제출 단계에서만 토론을 시작할 수 있습니다',
-          requestId 
-        },
-        { status: 409 }
-      );
-    }
-
-    // 안건 확인
-    const motion = roomData.motions?.[0];
-    if (!motion || motion.status !== 'agreed') {
-      console.warn('[debate-start-api] POST no agreed motion', { 
-        requestId, 
+      console.warn('[debate-start-api] POST invalid room status', {
+        requestId,
         roomId,
-        motionStatus: motion?.status 
+        status: room.status
       });
       return NextResponse.json(
-        { 
-          error: 'no_motion', 
-          message: '합의된 안건이 없습니다',
-          requestId 
+        {
+          error: 'invalid_status',
+          message: '주장 제출 단계에서만 토론을 시작할 수 있습니다',
+          requestId
         },
         { status: 409 }
       );
     }
 
-    // 양측 주장 확인
-    const argumentsA = roomData.arguments?.filter((arg: any) => arg.side === 'A') || [];
-    const argumentsB = roomData.arguments?.filter((arg: any) => arg.side === 'B') || [];
+    // 안건 조회 (별도 쿼리)
+    const { data: motionData, error: motionError } = await supabase
+      .from('motions')
+      .select('id, title, description, status, agreed_at')
+      .eq('room_id', roomId)
+      .eq('status', 'agreed')
+      .single();
+
+    if (motionError || !motionData) {
+      console.warn('[debate-start-api] POST no agreed motion', {
+        requestId,
+        roomId,
+        motionError: motionError?.message
+      });
+      return NextResponse.json(
+        {
+          error: 'no_motion',
+          message: '합의된 안건이 없습니다',
+          requestId
+        },
+        { status: 409 }
+      );
+    }
+
+    // 양측 주장 조회 (별도 쿼리)
+    const { data: argumentsData, error: argumentsError } = await supabase
+      .from('arguments')
+      .select('id, user_id, side, title, content, evidence, submitted_at')
+      .eq('room_id', roomId);
+
+    if (argumentsError) {
+      console.error('[debate-start-api] POST arguments fetch error', {
+        requestId,
+        error: argumentsError.message
+      });
+      return NextResponse.json(
+        {
+          error: 'database_error',
+          message: '주장 조회 중 오류가 발생했습니다',
+          requestId
+        },
+        { status: 500 }
+      );
+    }
+
+    const argumentsA = argumentsData?.filter((arg: any) => arg.side === 'A') || [];
+    const argumentsB = argumentsData?.filter((arg: any) => arg.side === 'B') || [];
 
     if (argumentsA.length === 0 || argumentsB.length === 0) {
       console.warn('[debate-start-api] POST missing arguments', { 
@@ -242,9 +264,9 @@ export async function POST(
         room_id: roomId,
         round: 1,
         motion: {
-          id: motion.id,
-          title: motion.title,
-          description: motion.description
+          id: motionData.id,
+          title: motionData.title,
+          description: motionData.description
         },
         argument_a: argumentsA[0],
         argument_b: argumentsB[0],
