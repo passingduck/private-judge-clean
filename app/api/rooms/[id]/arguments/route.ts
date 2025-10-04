@@ -78,11 +78,11 @@ export async function GET(
     }
 
     // 방의 모든 주장 조회
-    const arguments = await argumentQueries.getByRoomId(roomId);
+    const roomArguments = await argumentQueries.getByRoomId(roomId);
 
     // 내 주장과 상대방 주장 분리
-    const myArgument = arguments.find(arg => arg.user_id === userId) || null;
-    const opponentArgument = arguments.find(arg => arg.user_id !== userId) || null;
+    const myArgument = roomArguments.find(arg => arg.user_id === userId) || null;
+    const opponentArgument = roomArguments.find(arg => arg.user_id !== userId) || null;
 
     // 제출 가능 여부 확인 (status가 arguments_submission이고 아직 제출하지 않은 경우)
     const canSubmit = roomData.status === 'arguments_submission' && !myArgument;
@@ -244,30 +244,22 @@ export async function POST(
 
     // 양쪽 주장이 모두 제출되었는지 확인
     const allArguments = await argumentQueries.getByRoomId(roomId);
-    if (allArguments.length >= 2) {
-      // 방 상태를 ai_processing으로 변경
-      await supabase
-        .from('rooms')
-        .update({
-          status: 'ai_processing',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', roomId);
-    }
+    const bothSubmitted = allArguments.length >= 2;
 
     console.info('[arguments-api] POST success', {
       requestId,
       roomId,
       userId,
       argumentId: createdArgument.id,
-      bothSubmitted: allArguments.length >= 2
+      bothSubmitted
     });
 
     return NextResponse.json({
       argument: createdArgument,
-      room_status: allArguments.length >= 2 ? 'ai_processing' : 'arguments_submission',
-      message: allArguments.length >= 2
-        ? '양측 주장이 모두 제출되어 AI 토론이 시작됩니다'
+      both_submitted: bothSubmitted,
+      room_status: roomData.status,
+      message: bothSubmitted
+        ? '양측 주장이 모두 제출되었습니다. 토론을 시작할 수 있습니다.'
         : '주장이 성공적으로 제출되었습니다',
       requestId
     }, { status: 201 });
