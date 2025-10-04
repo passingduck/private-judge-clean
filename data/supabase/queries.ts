@@ -230,11 +230,10 @@ export const motionQueries = {
   }
 };
 
-// 주장 관련 쿼리 (테이블이 존재하지 않아 주석 처리)
-/*
+// 주장 관련 쿼리
 export const argumentQueries = {
   async getByRoomId(roomId: string): Promise<Argument[]> {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin!
       .from('arguments')
       .select(`
         *,
@@ -251,7 +250,7 @@ export const argumentQueries = {
   },
 
   async getByUserAndRoom(userId: string, roomId: string): Promise<Argument | null> {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin!
       .from('arguments')
       .select('*')
       .eq('user_id', userId)
@@ -266,7 +265,7 @@ export const argumentQueries = {
   },
 
   async create(argument: Tables['arguments']['Insert']): Promise<Argument> {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin!
       .from('arguments')
       .insert(argument)
       .select()
@@ -280,7 +279,7 @@ export const argumentQueries = {
   },
 
   async update(id: string, updates: Tables['arguments']['Update']): Promise<Argument> {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin!
       .from('arguments')
       .update(updates)
       .eq('id', id)
@@ -294,7 +293,6 @@ export const argumentQueries = {
     return data;
   }
 };
-*/
 
 // 작업 큐 관련 쿼리 (테이블이 존재하지 않아 주석 처리)
 /*

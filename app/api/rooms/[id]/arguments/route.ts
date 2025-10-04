@@ -1,79 +1,122 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase, supabaseAdmin } from '@/data/supabase/client';
+import { headers } from 'next/headers';
+import { argumentQueries } from '@/data/supabase/queries';
 import { ArgumentModel, CreateArgumentSchema, ArgumentSide } from '@/core/models/argument';
+import { getSupabaseClient } from '@/data/supabase/client';
 
-// GET /api/rooms/[id]/arguments - 사용자와 상대방의 주장 조회
+interface RouteParams {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+// GET /api/rooms/[id]/arguments - 방의 주장 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: RouteParams
 ) {
+  const requestId = crypto.randomUUID();
+  const headersList = await headers();
+  const userId = headersList.get('x-user-id');
+  const userEmail = headersList.get('x-user-email');
+  const { id: roomId } = await params;
+
+  console.info('[arguments-api] GET start', {
+    requestId,
+    userId,
+    userEmail,
+    roomId
+  });
+
   try {
-    const { id: roomId } = await params;
-
     // 인증 확인
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 });
+    if (!userId || !userEmail) {
+      console.warn('[arguments-api] GET unauthorized', { requestId });
+      return NextResponse.json(
+        {
+          error: 'unauthorized',
+          message: '인증이 필요합니다',
+          requestId
+        },
+        { status: 401 }
+      );
     }
 
-    const token = authHeader.substring(7);
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    const userId = payload.sub;
-
-    if (!userId) {
-      return NextResponse.json({ error: '유효하지 않은 토큰입니다' }, { status: 401 });
-    }
+    const supabase = getSupabaseClient(true); // admin client
 
     // 방 정보 조회
     const { data: roomData, error: roomError } = await supabase
       .from('rooms')
-      .select('id, creator_id, participant_id, status')
+      .select('*, room_members(user_id, role, side)')
       .eq('id', roomId)
       .single();
 
     if (roomError || !roomData) {
-      return NextResponse.json({ error: '방을 찾을 수 없습니다' }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: 'not_found',
+          message: '방을 찾을 수 없습니다',
+          requestId
+        },
+        { status: 404 }
+      );
     }
 
-    // 권한 확인
-    if (roomData.creator_id !== userId && roomData.participant_id !== userId) {
-      return NextResponse.json({ error: '접근 권한이 없습니다' }, { status: 403 });
+    // 사용자가 이 방의 멤버인지 확인
+    const roomMembers = roomData.room_members as any[];
+    const userMember = roomMembers?.find((m: any) => m.user_id === userId);
+
+    if (!userMember) {
+      return NextResponse.json(
+        {
+          error: 'forbidden',
+          message: '이 방의 멤버가 아닙니다',
+          requestId
+        },
+        { status: 403 }
+      );
     }
 
-    // 사용자의 side 결정
-    const isCreator = roomData.creator_id === userId;
-    const userSide = isCreator ? ArgumentSide.A : ArgumentSide.B;
-    const opponentSide = isCreator ? ArgumentSide.B : ArgumentSide.A;
+    // 방의 모든 주장 조회
+    const arguments = await argumentQueries.getByRoomId(roomId);
 
-    // 주장들 조회 (admin client 사용)
-    const { data: argumentsData, error: argsError } = await supabaseAdmin!
-      .from('arguments')
-      .select('*')
-      .eq('room_id', roomId);
+    // 내 주장과 상대방 주장 분리
+    const myArgument = arguments.find(arg => arg.user_id === userId) || null;
+    const opponentArgument = arguments.find(arg => arg.user_id !== userId) || null;
 
-    if (argsError) {
-      console.error('Arguments query error:', argsError);
-      return NextResponse.json({ error: '주장을 조회할 수 없습니다' }, { status: 500 });
-    }
-
-    // 사용자와 상대방의 주장 분리
-    const myArgument = argumentsData?.find(arg => arg.side === userSide) || null;
-    const opponentArgument = argumentsData?.find(arg => arg.side === opponentSide) || null;
-
-    // 제출 가능 여부 확인
+    // 제출 가능 여부 확인 (status가 arguments_submission이고 아직 제출하지 않은 경우)
     const canSubmit = roomData.status === 'arguments_submission' && !myArgument;
+
+    console.info('[arguments-api] GET success', {
+      requestId,
+      roomId,
+      userId,
+      hasMyArgument: !!myArgument,
+      hasOpponentArgument: !!opponentArgument,
+      canSubmit
+    });
 
     return NextResponse.json({
       my_argument: myArgument,
       opponent_argument: opponentArgument,
-      user_side: userSide,
-      can_submit: canSubmit
-    });
+      user_side: userMember.side,
+      can_submit: canSubmit,
+      requestId
+    }, { status: 200 });
 
   } catch (error) {
-    console.error('Get arguments error:', error);
+    console.error('[arguments-api] GET unexpected error', {
+      requestId,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
+
     return NextResponse.json(
-      { error: '주장 조회 중 오류가 발생했습니다' },
+      {
+        error: 'internal_error',
+        message: '서버 내부 오류가 발생했습니다',
+        requestId
+      },
       { status: 500 }
     );
   }
@@ -82,109 +125,127 @@ export async function GET(
 // POST /api/rooms/[id]/arguments - 주장 제출
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: RouteParams
 ) {
+  const requestId = crypto.randomUUID();
+  const headersList = await headers();
+  const userId = headersList.get('x-user-id');
+  const userEmail = headersList.get('x-user-email');
+  const { id: roomId } = await params;
+
+  console.info('[arguments-api] POST start', {
+    requestId,
+    userId,
+    userEmail,
+    roomId
+  });
+
   try {
-    const { id: roomId } = await params;
-    const body = await request.json();
-
     // 인증 확인
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 });
+    if (!userId || !userEmail) {
+      console.warn('[arguments-api] POST unauthorized', { requestId });
+      return NextResponse.json(
+        {
+          error: 'unauthorized',
+          message: '인증이 필요합니다',
+          requestId
+        },
+        { status: 401 }
+      );
     }
 
-    const token = authHeader.substring(7);
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    const userId = payload.sub;
+    const supabase = getSupabaseClient(true); // admin client
 
-    if (!userId) {
-      return NextResponse.json({ error: '유효하지 않은 토큰입니다' }, { status: 401 });
-    }
+    // 요청 body 파싱
+    const body = await request.json();
 
     // 방 정보 조회
     const { data: roomData, error: roomError } = await supabase
       .from('rooms')
-      .select('id, creator_id, participant_id, status')
+      .select('*, room_members(user_id, role, side)')
       .eq('id', roomId)
       .single();
 
     if (roomError || !roomData) {
-      return NextResponse.json({ error: '방을 찾을 수 없습니다' }, { status: 404 });
-    }
-
-    // 권한 확인
-    if (roomData.creator_id !== userId && roomData.participant_id !== userId) {
-      return NextResponse.json({ error: '접근 권한이 없습니다' }, { status: 403 });
+      return NextResponse.json(
+        {
+          error: 'not_found',
+          message: '방을 찾을 수 없습니다',
+          requestId
+        },
+        { status: 404 }
+      );
     }
 
     // 방 상태 확인
     if (roomData.status !== 'arguments_submission') {
-      return NextResponse.json({ error: '주장 제출 단계가 아닙니다' }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'invalid_state',
+          message: '주장 제출 단계가 아닙니다',
+          requestId
+        },
+        { status: 400 }
+      );
     }
 
-    // 사용자의 side 결정
-    const isCreator = roomData.creator_id === userId;
-    const userSide = isCreator ? ArgumentSide.A : ArgumentSide.B;
+    // 사용자가 이 방의 멤버인지 확인
+    const roomMembers = roomData.room_members as any[];
+    const userMember = roomMembers?.find((m: any) => m.user_id === userId);
+
+    if (!userMember) {
+      return NextResponse.json(
+        {
+          error: 'forbidden',
+          message: '이 방의 멤버가 아닙니다',
+          requestId
+        },
+        { status: 403 }
+      );
+    }
 
     // 이미 제출했는지 확인
-    const { data: existingArg } = await supabaseAdmin!
-      .from('arguments')
-      .select('id')
-      .eq('room_id', roomId)
-      .eq('user_id', userId)
-      .single();
-
-    if (existingArg) {
-      return NextResponse.json({ error: '이미 주장을 제출하셨습니다' }, { status: 400 });
+    const existingArgument = await argumentQueries.getByUserAndRoom(userId, roomId);
+    if (existingArgument) {
+      return NextResponse.json(
+        {
+          error: 'already_submitted',
+          message: '이미 주장을 제출했습니다',
+          requestId
+        },
+        { status: 400 }
+      );
     }
 
-    // 입력 데이터 검증
-    const validation = CreateArgumentSchema.safeParse(body);
+    // 데이터 검증
+    const validation = CreateArgumentSchema.safeParse({
+      ...body,
+      room_id: roomId
+    });
+
     if (!validation.success) {
-      return NextResponse.json({
-        error: '유효하지 않은 입력입니다',
-        details: validation.error.errors
-      }, { status: 400 });
+      const firstError = validation.error.issues[0];
+      return NextResponse.json(
+        {
+          error: 'validation_error',
+          message: `${firstError.path.join('.')}: ${firstError.message}`,
+          requestId
+        },
+        { status: 400 }
+      );
     }
 
-    // 새 주장 생성
-    const newArgument = ArgumentModel.createNew(validation.data, userId, userSide);
+    // 주장 생성
+    const side = userMember.side as ArgumentSide;
+    const newArgument = ArgumentModel.createNew(validation.data, userId, side);
 
-    // DB에 저장 (admin client 사용)
-    const { data: savedArgument, error: saveError } = await supabaseAdmin!
-      .from('arguments')
-      .insert({
-        room_id: roomId,
-        user_id: newArgument.user_id,
-        side: newArgument.side,
-        title: newArgument.title,
-        content: newArgument.content,
-        evidence: newArgument.evidence,
-        submitted_at: newArgument.submitted_at,
-        created_at: newArgument.created_at,
-        updated_at: newArgument.updated_at
-      })
-      .select()
-      .single();
+    // DB에 저장
+    const createdArgument = await argumentQueries.create(newArgument);
 
-    if (saveError) {
-      console.error('Save argument error:', saveError);
-      return NextResponse.json({ error: '주장 저장에 실패했습니다' }, { status: 500 });
-    }
-
-    // 양측이 모두 제출했는지 확인
-    const { data: allArguments } = await supabaseAdmin!
-      .from('arguments')
-      .select('side')
-      .eq('room_id', roomId);
-
-    const hasSideA = allArguments?.some(arg => arg.side === ArgumentSide.A);
-    const hasSideB = allArguments?.some(arg => arg.side === ArgumentSide.B);
-    const bothSubmitted = hasSideA && hasSideB;
-
-    // 양측 모두 제출했으면 방 상태를 ai_processing으로 변경
-    if (bothSubmitted) {
+    // 양쪽 주장이 모두 제출되었는지 확인
+    const allArguments = await argumentQueries.getByRoomId(roomId);
+    if (allArguments.length >= 2) {
+      // 방 상태를 ai_processing으로 변경
       await supabase
         .from('rooms')
         .update({
@@ -194,18 +255,36 @@ export async function POST(
         .eq('id', roomId);
     }
 
+    console.info('[arguments-api] POST success', {
+      requestId,
+      roomId,
+      userId,
+      argumentId: createdArgument.id,
+      bothSubmitted: allArguments.length >= 2
+    });
+
     return NextResponse.json({
-      argument: savedArgument,
-      room_status: bothSubmitted ? 'ai_processing' : 'arguments_submission',
-      message: bothSubmitted 
-        ? '양측 주장이 모두 제출되어 AI 재판이 시작됩니다' 
-        : '주장이 성공적으로 제출되었습니다'
+      argument: createdArgument,
+      room_status: allArguments.length >= 2 ? 'ai_processing' : 'arguments_submission',
+      message: allArguments.length >= 2
+        ? '양측 주장이 모두 제출되어 AI 토론이 시작됩니다'
+        : '주장이 성공적으로 제출되었습니다',
+      requestId
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Create argument error:', error);
+    console.error('[arguments-api] POST unexpected error', {
+      requestId,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
+
     return NextResponse.json(
-      { error: '주장 제출 중 오류가 발생했습니다' },
+      {
+        error: 'internal_error',
+        message: '서버 내부 오류가 발생했습니다',
+        requestId
+      },
       { status: 500 }
     );
   }

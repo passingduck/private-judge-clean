@@ -48,17 +48,12 @@ export default function ArgumentsPage({ params }: { params: Promise<{ id: string
 
   const fetchArguments = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
+      const response = await fetch(`/api/rooms/${roomId}/arguments`);
+
+      if (response.status === 401) {
         router.push('/login');
         return;
       }
-
-      const response = await fetch(`/api/rooms/${roomId}/arguments`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
 
       if (response.ok) {
         const data = await response.json();
@@ -118,12 +113,10 @@ export default function ArgumentsPage({ params }: { params: Promise<{ id: string
     setSubmitting(true);
 
     try {
-      const token = localStorage.getItem('access_token');
       const response = await fetch(`/api/rooms/${roomId}/arguments`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           title,
@@ -142,7 +135,7 @@ export default function ArgumentsPage({ params }: { params: Promise<{ id: string
           fetchArguments();
         }
       } else {
-        alert(result.error || '주장 제출에 실패했습니다');
+        alert(result.message || result.error || '주장 제출에 실패했습니다');
       }
     } catch (error) {
       console.error('Submit error:', error);
