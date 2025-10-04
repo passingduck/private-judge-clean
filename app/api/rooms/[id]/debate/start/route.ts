@@ -56,6 +56,11 @@ export async function POST(
     }
 
     const supabase = getSupabaseClient(true); // Use service role
+    console.log('[debate-start-api] POST supabase client check', {
+      requestId,
+      isServiceRoleConfigured: require('@/data/supabase/client').isServiceRoleConfigured(),
+      hasServiceRole: !!process.env.SUPABASE_SERVICE_ROLE
+    });
 
     // 방 정보 조회
     const { data: roomData, error: roomError } = await supabase
