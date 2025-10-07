@@ -57,10 +57,10 @@ export class AIService {
   constructor() {
     this.config = {
       model: process.env.OPENAI_MODEL || 'gpt-4',
-      temperature: 0.7,
-      maxTokens: 2000,
+      temperature: 1,
+      maxTokens: 16000,
       retryAttempts: 3,
-      timeoutMs: 30000
+      timeoutMs: 60000
     };
     
     this.openaiApiKey = process.env.OPENAI_API_KEY || '';
@@ -82,11 +82,11 @@ export class AIService {
     requestId: string
   ): Promise<any> {
     const prompt = this.buildLawyerPrompt(
-      motion, 
-      opponentArgument, 
-      myArgument, 
-      side, 
-      roundNumber, 
+      motion,
+      opponentArgument,
+      myArgument,
+      side,
+      roundNumber,
       persona
     );
 
@@ -99,8 +99,32 @@ export class AIService {
     });
 
     const response = await this.callOpenAI(prompt, requestId);
-    
-    return validateLLMResponse(LLMSchemas.lawyer, response, 'lawyer');
+
+    // Parse JSON string before validation
+    try {
+      const parsed = JSON.parse(response);
+      console.log('[ai-service] Parsed GPT-5 lawyer response:', {
+        requestId,
+        side,
+        parsedKeys: Object.keys(parsed),
+        fullParsed: JSON.stringify(parsed, null, 2)
+      });
+      return validateLLMResponse(LLMSchemas.lawyer, parsed, 'lawyer');
+    } catch (error) {
+      console.error('[ai-service] JSON parse error', {
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+        responsePreview: response.substring(0, 200)
+      });
+      return {
+        success: false,
+        error: {
+          code: 'JSON_PARSE_ERROR',
+          message: 'JSON 파싱 실패',
+          details: { originalError: String(error) }
+        }
+      };
+    }
   }
 
   /**
@@ -130,8 +154,26 @@ export class AIService {
     });
 
     const response = await this.callOpenAI(prompt, requestId);
-    
-    return validateLLMResponse(LLMSchemas.judge, response, 'judge');
+
+    // Parse JSON string before validation
+    try {
+      const parsed = JSON.parse(response);
+      return validateLLMResponse(LLMSchemas.judge, parsed, 'judge');
+    } catch (error) {
+      console.error('[ai-service] JSON parse error', {
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+        responsePreview: response.substring(0, 200)
+      });
+      return {
+        success: false,
+        error: {
+          code: 'JSON_PARSE_ERROR',
+          message: 'JSON 파싱 실패',
+          details: { originalError: String(error) }
+        }
+      };
+    }
   }
 
   /**
@@ -160,8 +202,26 @@ export class AIService {
     });
 
     const response = await this.callOpenAI(prompt, requestId);
-    
-    return validateLLMResponse(LLMSchemas.juror, response, 'juror');
+
+    // Parse JSON string before validation
+    try {
+      const parsed = JSON.parse(response);
+      return validateLLMResponse(LLMSchemas.juror, parsed, 'juror');
+    } catch (error) {
+      console.error('[ai-service] JSON parse error', {
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+        responsePreview: response.substring(0, 200)
+      });
+      return {
+        success: false,
+        error: {
+          code: 'JSON_PARSE_ERROR',
+          message: 'JSON 파싱 실패',
+          details: { originalError: String(error) }
+        }
+      };
+    }
   }
 
   /**
@@ -228,7 +288,7 @@ export class AIService {
               }
             ],
             temperature: this.config.temperature,
-            max_tokens: this.config.maxTokens,
+            max_completion_tokens: this.config.maxTokens,
             response_format: { type: 'json_object' }
           }),
           signal: controller.signal
@@ -242,13 +302,23 @@ export class AIService {
         }
 
         const data = await response.json();
-        
+
+        console.log('[ai-service] Full OpenAI response:', {
+          requestId,
+          data: JSON.stringify(data, null, 2)
+        });
+
         if (!data.choices || data.choices.length === 0) {
           throw new Error('No response choices from OpenAI API');
         }
 
         const content = data.choices[0].message?.content;
         if (!content) {
+          console.error('[ai-service] Empty content details:', {
+            requestId,
+            choices: data.choices,
+            message: data.choices[0]?.message
+          });
           throw new Error('Empty response content from OpenAI API');
         }
 
@@ -317,12 +387,10 @@ ${opponentArgument.content}
 상대측 주장에 대한 반박을 작성해주세요. 다음 JSON 형식으로 응답해주세요:
 
 {
-  "argument": "논리적이고 설득력 있는 반박 (50-2000자)",
-  "keyPoints": ["핵심 포인트 1", "핵심 포인트 2", "핵심 포인트 3"],
-  "counterArguments": ["반박 논리 1", "반박 논리 2", "반박 논리 3"],
-  "evidenceAnalysis": "증거 분석 및 해석 (50-1000자)",
-  "confidenceScore": 8,
-  "tone": "formal"
+  "statement": "논리적이고 설득력 있는 반박 (50-2000자)",
+  "key_points": ["핵심 포인트 1", "핵심 포인트 2", "핵심 포인트 3"],
+  "counter_arguments": ["반박 논리 1", "반박 논리 2", "반박 논리 3"],
+  "evidence_references": ["증거 참조 1", "증거 참조 2"]
 }
 
 주의사항:
@@ -330,6 +398,7 @@ ${opponentArgument.content}
 - 상대방을 존중하는 어조를 유지하세요
 - 감정적 공격보다는 논리적 반박에 집중하세요
 - 한국어로 작성하세요
+- key_points는 2-5개, counter_arguments는 1-3개, evidence_references는 최대 5개까지 작성하세요
 `;
   }
 
@@ -376,15 +445,16 @@ ${roundsText}
 공정하고 객관적인 판결을 내려주세요. 다음 JSON 형식으로 응답해주세요:
 
 {
-  "winner": "A",
-  "reasoning": "판결 근거 (100-3000자)",
-  "strengthsA": "A측의 강점 분석 (50-1000자)",
-  "weaknessesA": "A측의 약점 분석 (50-1000자)",
-  "strengthsB": "B측의 강점 분석 (50-1000자)",
-  "weaknessesB": "B측의 약점 분석 (50-1000자)",
-  "overallQuality": 8,
-  "fairnessScore": 9,
-  "clarityScore": 7
+  "summary": "판결 요약 (100-500자)",
+  "analysis_a": "A측 주장 상세 분석 (100-1000자)",
+  "analysis_b": "B측 주장 상세 분석 (100-1000자)",
+  "strengths_a": ["A측 강점 1", "A측 강점 2"],
+  "weaknesses_a": ["A측 약점 1"],
+  "strengths_b": ["B측 강점 1", "B측 강점 2"],
+  "weaknesses_b": ["B측 약점 1"],
+  "reasoning": "최종 판결 근거 (200-1000자)",
+  "score_a": 75,
+  "score_b": 82
 }
 
 평가 기준:
@@ -393,6 +463,7 @@ ${roundsText}
 - 반박의 효과성
 - 전체적인 설득력
 - 한국어로 작성하세요
+- strengths는 2-5개, weaknesses는 1-3개, score는 0-100 사이의 정수로 작성하세요
 `;
   }
 
@@ -440,9 +511,9 @@ ${roundsText}
 
 {
   "vote": "A",
-  "reasoning": "투표 이유 (50-1000자)",
+  "reasoning": "투표 이유 (50-300자)",
   "confidence": 7,
-  "biasDetected": false
+  "key_factors": ["결정적 요인 1", "결정적 요인 2"]
 }
 
 고려사항:
@@ -450,6 +521,7 @@ ${roundsText}
 - 실생활에 미치는 영향은?
 - 상식적으로 납득할 수 있는가?
 - 한국어로 작성하세요
+- vote는 "A" 또는 "B", confidence는 1-10 사이의 정수, key_factors는 1-3개로 작성하세요
 `;
   }
 

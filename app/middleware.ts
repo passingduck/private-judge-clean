@@ -22,7 +22,9 @@ const AUTH_PATHS = [
 // API 경로 중 인증이 필요 없는 경로들
 const PUBLIC_API_PATHS = [
   '/api/auth',
-  '/api/health'
+  '/api/health',
+  '/api/jobs/process', // Worker endpoint
+  '/api/jobs/next'     // Worker endpoint
 ];
 
 // 경로 매칭 헬퍼
@@ -36,7 +38,7 @@ function matchesPath(pathname: string, patterns: string[]): boolean {
 }
 
 export async function middleware(request: NextRequest) {
-  const requestId = crypto.randomUUID();
+  const requestId = crypto.randomUUID(); // DEBUG
   const { pathname } = request.nextUrl;
   
   console.info('[middleware] start', { 
@@ -62,21 +64,36 @@ export async function middleware(request: NextRequest) {
     const cookieHeader = request.headers.get('cookie') || '';
     const session = getSessionFromCookies(cookieHeader);
     
-    console.info('[middleware] session check', { 
-      requestId, 
+    console.info('[middleware] session check', {
+      requestId,
       hasSession: !!session,
       userId: session?.user?.id,
       pathname
     });
 
+    // DEBUG: 공개 API 체크 전 로깅
+    console.info('[middleware] checking public API', {
+      requestId,
+      pathname,
+      startsWithApi: pathname.startsWith('/api/'),
+      matches: matchesPath(pathname, PUBLIC_API_PATHS),
+      publicPaths: PUBLIC_API_PATHS
+    });
+
+    // 공개 API는 먼저 체크 (보호된 경로보다 우선)
+    if (pathname.startsWith('/api/') && matchesPath(pathname, PUBLIC_API_PATHS)) {
+      console.info('[middleware] public API access allowed', { requestId, pathname });
+      return NextResponse.next();
+    }
+
     // 인증된 사용자가 로그인 페이지 접근 시 대시보드로 리다이렉트
     if (session && matchesPath(pathname, AUTH_PATHS)) {
-      console.info('[middleware] redirect authenticated user from auth page', { 
-        requestId, 
+      console.info('[middleware] redirect authenticated user from auth page', {
+        requestId,
         userId: session.user.id,
-        from: pathname 
+        from: pathname
       });
-      
+
       const redirectUrl = new URL('/dashboard', request.url);
       return NextResponse.redirect(redirectUrl);
     }
