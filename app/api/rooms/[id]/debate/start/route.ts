@@ -110,9 +110,9 @@ export async function POST(
     const room: Room = roomValidation.data;
     const roomModel = new RoomModel(room);
 
-    // 권한 확인 (생성자만 토론 시작 가능)
-    if (!roomModel.isCreator(userId)) {
-      console.warn('[debate-start-api] POST not creator', {
+    // 권한 확인 (생성자 또는 참가자만 토론 시작 가능)
+    if (!roomModel.isCreator(userId) && !roomModel.isParticipant(userId)) {
+      console.warn('[debate-start-api] POST not authorized', {
         requestId,
         roomId,
         userId
@@ -120,7 +120,7 @@ export async function POST(
       return NextResponse.json(
         {
           error: 'forbidden',
-          message: '방 생성자만 토론을 시작할 수 있습니다',
+          message: '방 참여자만 토론을 시작할 수 있습니다',
           requestId
         },
         { status: 403 }

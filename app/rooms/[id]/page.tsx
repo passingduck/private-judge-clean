@@ -87,11 +87,14 @@ export default function RoomDetailPage() {
   const [joinError, setJoinError] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<{ is_creator: boolean; side: string } | null>(null);
   const [leaveLoading, setLeaveLoading] = useState(false);
+  const [bothArgumentsSubmitted, setBothArgumentsSubmitted] = useState(false);
+  const [debateStartLoading, setDebateStartLoading] = useState(false);
 
   useEffect(() => {
     if (roomId) {
       fetchRoomDetails();
       fetchMotion();
+      fetchArguments();
     }
   }, [roomId]);
 
@@ -190,6 +193,52 @@ export default function RoomDetailPage() {
       alert(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다');
     } finally {
       setLeaveLoading(false);
+    }
+  };
+
+  const fetchArguments = async () => {
+    try {
+      const response = await fetch(`/api/rooms/${roomId}/arguments`);
+
+      if (response.ok) {
+        const data = await response.json();
+        // Check if both my_argument and opponent_argument are submitted
+        const bothSubmitted = !!data.my_argument && !!data.opponent_argument;
+        setBothArgumentsSubmitted(bothSubmitted);
+      }
+    } catch (err) {
+      // Arguments may not exist yet, so ignore errors
+      console.log('Error fetching arguments:', err);
+    }
+  };
+
+  const handleStartDebate = async () => {
+    if (!confirm('AI 토론을 시작하시겠습니까? 약 10-15분이 소요됩니다.')) {
+      return;
+    }
+
+    try {
+      setDebateStartLoading(true);
+
+      const response = await fetch(`/api/rooms/${roomId}/debate/start`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'AI 토론 시작에 실패했습니다');
+      }
+
+      // 성공 시 방 정보 새로고침
+      await fetchRoomDetails();
+      alert('AI 토론이 시작되었습니다. 약 10-15분 후 결과를 확인할 수 있습니다.');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다');
+    } finally {
+      setDebateStartLoading(false);
     }
   };
 
@@ -481,13 +530,26 @@ export default function RoomDetailPage() {
                 )}
 
                 {room.status === 'arguments_submission' && (
-                  <Link
-                    href={`/rooms/${room.id}/arguments`}
-                    className="w-full bg-primary-accent text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center justify-center"
-                  >
-                    <DocumentTextIcon className="h-4 w-4 mr-2" />
-                    주장 작성
-                  </Link>
+                  <>
+                    <Link
+                      href={`/rooms/${room.id}/arguments`}
+                      className="w-full bg-primary-accent text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center justify-center"
+                    >
+                      <DocumentTextIcon className="h-4 w-4 mr-2" />
+                      주장 작성
+                    </Link>
+
+                    {bothArgumentsSubmitted && (
+                      <button
+                        onClick={handleStartDebate}
+                        disabled={debateStartLoading}
+                        className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center disabled:opacity-50"
+                      >
+                        <PlayIcon className="h-4 w-4 mr-2" />
+                        {debateStartLoading ? 'AI 처리 시작 중...' : 'AI 처리 시작'}
+                      </button>
+                    )}
+                  </>
                 )}
 
                 {(room.status === 'ai_debate_in_progress' || room.status === 'completed') && (

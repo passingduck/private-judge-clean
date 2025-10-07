@@ -108,7 +108,7 @@ export default function Stepper({
               </div>
             </div>
             {index < steps.length - 1 && (
-              <div className="absolute top-4 left-8 w-full">
+              <div className="absolute top-4 left-8 w-full -z-10">
                 <div className={`h-0.5 ${getConnectorClass(step.status, steps[index + 1]?.status)}`} />
               </div>
             )}
