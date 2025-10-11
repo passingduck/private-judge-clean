@@ -53,12 +53,47 @@ const STATUS_INFO: Record<RoomStatus, StatusInfo> = {
     description: '주장을 제출하는 단계입니다',
     nextAction: '양측이 주장과 근거를 제출'
   },
-  [RoomStatus.AI_PROCESSING]: {
+  [RoomStatus.DEBATE_ROUND_1]: {
     icon: ArrowPathIcon,
     color: 'text-indigo-600',
     bgColor: 'bg-indigo-50',
-    description: 'AI 토론이 진행 중입니다',
-    nextAction: 'AI가 자동으로 토론을 진행'
+    description: '1차 AI 토론 진행 중',
+    nextAction: 'AI 변호사들이 1차 토론 진행'
+  },
+  [RoomStatus.WAITING_REBUTTAL_1]: {
+    icon: ChatBubbleLeftRightIcon,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50',
+    description: '1차 반론 제출 대기 중',
+    nextAction: '양측이 1차 토론 결과에 대한 반론 제출'
+  },
+  [RoomStatus.DEBATE_ROUND_2]: {
+    icon: ArrowPathIcon,
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-50',
+    description: '2차 AI 토론 진행 중',
+    nextAction: 'AI 변호사들이 2차 토론 진행'
+  },
+  [RoomStatus.WAITING_REBUTTAL_2]: {
+    icon: ChatBubbleLeftRightIcon,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50',
+    description: '2차 반론 제출 대기 중',
+    nextAction: '양측이 2차 토론 결과에 대한 반론 제출'
+  },
+  [RoomStatus.DEBATE_ROUND_3]: {
+    icon: ArrowPathIcon,
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-50',
+    description: '3차(최종) AI 토론 진행 중',
+    nextAction: 'AI 변호사들이 최종 토론 진행'
+  },
+  [RoomStatus.AI_PROCESSING]: {
+    icon: ScaleIcon,
+    color: 'text-violet-600',
+    bgColor: 'bg-violet-50',
+    description: 'AI 배심원 투표 및 판사 판결 진행 중',
+    nextAction: 'AI 배심원과 판사가 최종 판결'
   },
   [RoomStatus.COMPLETED]: {
     icon: CheckCircleIcon,
@@ -79,6 +114,11 @@ const STEP_ORDER: RoomStatus[] = [
   RoomStatus.WAITING_PARTICIPANT,
   RoomStatus.AGENDA_NEGOTIATION,
   RoomStatus.ARGUMENTS_SUBMISSION,
+  RoomStatus.DEBATE_ROUND_1,
+  RoomStatus.WAITING_REBUTTAL_1,
+  RoomStatus.DEBATE_ROUND_2,
+  RoomStatus.WAITING_REBUTTAL_2,
+  RoomStatus.DEBATE_ROUND_3,
   RoomStatus.AI_PROCESSING,
   RoomStatus.COMPLETED
 ];
@@ -89,6 +129,12 @@ function getStatusVariant(status: RoomStatus): 'default' | 'primary' | 'success'
       return 'primary';
     case RoomStatus.AGENDA_NEGOTIATION:
     case RoomStatus.ARGUMENTS_SUBMISSION:
+    case RoomStatus.WAITING_REBUTTAL_1:
+    case RoomStatus.WAITING_REBUTTAL_2:
+      return 'warning';
+    case RoomStatus.DEBATE_ROUND_1:
+    case RoomStatus.DEBATE_ROUND_2:
+    case RoomStatus.DEBATE_ROUND_3:
     case RoomStatus.AI_PROCESSING:
       return 'warning';
     case RoomStatus.COMPLETED:
