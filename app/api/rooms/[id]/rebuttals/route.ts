@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { rebuttalQueries } from '@/data/supabase/queries';
 import { RebuttalModel, CreateRebuttalSchema, RebuttalRound } from '@/core/models/rebuttal';
+import { ArgumentSide } from '@/core/models/argument';
 import { getSupabaseClient } from '@/data/supabase/client';
 import { RoomStatus } from '@/core/models/room';
 import { JobType, CreateJob, JobModel } from '@/core/models/job';
@@ -268,7 +269,7 @@ export async function POST(
     }
 
     // 반론 생성
-    const side = userMember.side as 'A' | 'B';
+    const side = userMember.side === 'A' ? ArgumentSide.A : ArgumentSide.B;
     const newRebuttal = RebuttalModel.createNew(validation.data, userId, side);
 
     // DB에 저장
