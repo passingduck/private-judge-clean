@@ -223,48 +223,32 @@ async function processAIDebate(job: Job, aiService: AIService, supabase: any, re
     })
     .eq('id', roundData.id);
 
-  // 다음 라운드 생성 또는 배심원 단계로 이동
-  if (round < 3) {
-    // 다음 라운드 생성
-    const nextRound = round + 1;
-    const roundType = nextRound === 2 ? 'second' : 'final';
+  // 라운드별 상태 전환
+  if (round === 1) {
+    // 1차 토론 완료 - 반론 대기 상태로 변경
+    await supabase
+      .from('rooms')
+      .update({ status: 'waiting_rebuttal_1', updated_at: new Date().toISOString() })
+      .eq('id', room_id);
 
-    const { data: nextRoundData, error: nextRoundError } = await supabase
-      .from('rounds')
-      .insert({
-        room_id: room_id,
-        round_number: nextRound,
-        round_type: roundType,
-        status: 'pending'
-      })
-      .select()
-      .single();
+    console.info('[AI-DEBATE] Round 1 completed, waiting for rebuttals', { requestId });
 
-    if (nextRoundError) {
-      throw new Error(`다음 라운드 생성 실패: ${nextRoundError.message}`);
-    }
+  } else if (round === 2) {
+    // 2차 토론 완료 - 반론 대기 상태로 변경
+    await supabase
+      .from('rooms')
+      .update({ status: 'waiting_rebuttal_2', updated_at: new Date().toISOString() })
+      .eq('id', room_id);
 
-    // 다음 라운드 Job 생성
-    const nextJobData = {
-      type: JobType.AI_DEBATE,
-      room_id: room_id,
-      payload: {
-        room_id,
-        round: nextRound,
-        motion,
-        argument_a,
-        argument_b,
-        previous_sessions: [...(previous_sessions || []), { round, turns }]
-      },
-      max_retries: 3
-    };
+    console.info('[AI-DEBATE] Round 2 completed, waiting for rebuttals', { requestId });
 
-    await supabase.from('jobs').insert(nextJobData);
+  } else if (round === 3) {
+    // 3차 토론 완료 - AI 처리 상태로 변경하고 배심원 투표 Job 생성
+    await supabase
+      .from('rooms')
+      .update({ status: 'ai_processing', updated_at: new Date().toISOString() })
+      .eq('id', room_id);
 
-    console.info('[AI-DEBATE] Next round scheduled', { requestId, nextRound });
-
-  } else {
-    // 3라운드 완료 - 배심원 투표 Job 생성
     const juryJobData = {
       type: JobType.AI_JURY,
       room_id: room_id,
@@ -280,7 +264,7 @@ async function processAIDebate(job: Job, aiService: AIService, supabase: any, re
 
     await supabase.from('jobs').insert(juryJobData);
 
-    console.info('[AI-DEBATE] All rounds completed, jury voting scheduled', { requestId });
+    console.info('[AI-DEBATE] Round 3 completed, jury voting scheduled', { requestId });
   }
 
   return {

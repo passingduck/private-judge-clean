@@ -403,6 +403,90 @@ export const jobQueries = {
 };
 */
 
+// 반론 관련 쿼리
+export const rebuttalQueries = {
+  async getByRoomId(roomId: string): Promise<any[]> {
+    const { data, error } = await supabaseAdmin!
+      .from('rebuttals')
+      .select(`
+        *,
+        user:users!rebuttals_user_id_fkey(id, display_name)
+      `)
+      .eq('room_id', roomId)
+      .order('round_number', { ascending: true })
+      .order('submitted_at', { ascending: true });
+
+    if (error) {
+      throw new DatabaseError('Failed to get rebuttals', error.code, error);
+    }
+
+    return data || [];
+  },
+
+  async getByRoomIdAndRound(roomId: string, roundNumber: number): Promise<any[]> {
+    const { data, error } = await supabaseAdmin!
+      .from('rebuttals')
+      .select(`
+        *,
+        user:users!rebuttals_user_id_fkey(id, display_name)
+      `)
+      .eq('room_id', roomId)
+      .eq('round_number', roundNumber)
+      .order('submitted_at', { ascending: true });
+
+    if (error) {
+      throw new DatabaseError('Failed to get rebuttals by round', error.code, error);
+    }
+
+    return data || [];
+  },
+
+  async getByUserRoomAndRound(userId: string, roomId: string, roundNumber: number): Promise<any | null> {
+    const { data, error } = await supabaseAdmin!
+      .from('rebuttals')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('room_id', roomId)
+      .eq('round_number', roundNumber)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw new DatabaseError('Failed to get user rebuttal', error.code, error);
+    }
+
+    return data;
+  },
+
+  async create(rebuttal: any): Promise<any> {
+    const { data, error } = await supabaseAdmin!
+      .from('rebuttals')
+      .insert(rebuttal)
+      .select()
+      .single();
+
+    if (error) {
+      throw new DatabaseError('Failed to create rebuttal', error.code, error);
+    }
+
+    return data;
+  },
+
+  async update(id: string, updates: any): Promise<any> {
+    const { data, error } = await supabaseAdmin!
+      .from('rebuttals')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new DatabaseError('Failed to update rebuttal', error.code, error);
+    }
+
+    return data;
+  }
+};
+
 // 통계 및 집계 쿼리
 export const statsQueries = {
   async getRoomStats(roomId: string) {
@@ -425,13 +509,13 @@ export const statsQueries = {
 
   async getUserStats(userId: string) {
     const rooms = await roomQueries.getByUserId(userId, 100);
-    
+
     return {
       totalRooms: rooms.length,
       createdRooms: rooms.filter(r => r.creator_id === userId).length,
       participatedRooms: rooms.filter(r => r.participant_id === userId).length,
       completedRooms: rooms.filter(r => r.status === 'completed').length,
-      activeRooms: rooms.filter(r => 
+      activeRooms: rooms.filter(r =>
         ['agenda_negotiation', 'arguments_submission', 'ai_processing'].includes(r.status)
       ).length
     };

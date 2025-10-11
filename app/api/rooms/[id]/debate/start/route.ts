@@ -215,26 +215,26 @@ export async function POST(
       );
     }
 
-    // 방 상태를 AI 처리로 변경
+    // 방 상태를 1차 토론으로 변경
     const { error: statusUpdateError } = await supabase.rpc(
       'update_room_status',
       {
         p_room_id: roomId,
-        p_new_status: RoomStatus.AI_PROCESSING,
+        p_new_status: RoomStatus.DEBATE_ROUND_1,
         p_user_id: userId
       }
     );
 
     if (statusUpdateError) {
-      console.error('[debate-start-api] POST status update error', { 
-        requestId, 
-        error: statusUpdateError.message 
+      console.error('[debate-start-api] POST status update error', {
+        requestId,
+        error: statusUpdateError.message
       });
       return NextResponse.json(
-        { 
-          error: 'database_error', 
+        {
+          error: 'database_error',
           message: '방 상태 업데이트에 실패했습니다',
-          requestId 
+          requestId
         },
         { status: 500 }
       );

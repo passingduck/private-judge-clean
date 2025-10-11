@@ -13,6 +13,11 @@ export enum RoomStatus {
   WAITING_PARTICIPANT = 'waiting_participant',
   AGENDA_NEGOTIATION = 'agenda_negotiation',
   ARGUMENTS_SUBMISSION = 'arguments_submission',
+  DEBATE_ROUND_1 = 'debate_round_1',
+  WAITING_REBUTTAL_1 = 'waiting_rebuttal_1',
+  DEBATE_ROUND_2 = 'debate_round_2',
+  WAITING_REBUTTAL_2 = 'waiting_rebuttal_2',
+  DEBATE_ROUND_3 = 'debate_round_3',
   AI_PROCESSING = 'ai_processing',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled'
@@ -117,18 +122,48 @@ export const ROOM_STEPS = {
     name: '주장 제출',
     description: '양측이 각자의 주장을 작성하고 있습니다',
     order: 3,
+    nextSteps: [RoomStatus.DEBATE_ROUND_1, RoomStatus.CANCELLED]
+  },
+  [RoomStatus.DEBATE_ROUND_1]: {
+    name: '1차 토론',
+    description: 'AI 변호사들이 1차 토론을 진행하고 있습니다',
+    order: 4,
+    nextSteps: [RoomStatus.WAITING_REBUTTAL_1, RoomStatus.CANCELLED]
+  },
+  [RoomStatus.WAITING_REBUTTAL_1]: {
+    name: '1차 반론 대기',
+    description: '1차 토론 결과에 대한 양측의 반론을 기다리는 중입니다',
+    order: 5,
+    nextSteps: [RoomStatus.DEBATE_ROUND_2, RoomStatus.CANCELLED]
+  },
+  [RoomStatus.DEBATE_ROUND_2]: {
+    name: '2차 토론',
+    description: 'AI 변호사들이 2차 토론을 진행하고 있습니다',
+    order: 6,
+    nextSteps: [RoomStatus.WAITING_REBUTTAL_2, RoomStatus.CANCELLED]
+  },
+  [RoomStatus.WAITING_REBUTTAL_2]: {
+    name: '2차 반론 대기',
+    description: '2차 토론 결과에 대한 양측의 반론을 기다리는 중입니다',
+    order: 7,
+    nextSteps: [RoomStatus.DEBATE_ROUND_3, RoomStatus.CANCELLED]
+  },
+  [RoomStatus.DEBATE_ROUND_3]: {
+    name: '3차 토론 (최종)',
+    description: 'AI 변호사들이 최종 토론을 진행하고 있습니다',
+    order: 8,
     nextSteps: [RoomStatus.AI_PROCESSING, RoomStatus.CANCELLED]
   },
   [RoomStatus.AI_PROCESSING]: {
-    name: 'AI 토론 진행',
-    description: 'AI가 토론을 진행하고 판결을 내리는 중입니다',
-    order: 4,
+    name: 'AI 심사',
+    description: 'AI 배심원들이 투표하고 판사가 최종 판결을 내리는 중입니다',
+    order: 9,
     nextSteps: [RoomStatus.COMPLETED, RoomStatus.CANCELLED]
   },
   [RoomStatus.COMPLETED]: {
     name: '완료',
     description: '토론이 완료되고 최종 판결이 나왔습니다',
-    order: 5,
+    order: 10,
     nextSteps: []
   },
   [RoomStatus.CANCELLED]: {
@@ -193,6 +228,11 @@ export class RoomModel {
     return [
       RoomStatus.AGENDA_NEGOTIATION,
       RoomStatus.ARGUMENTS_SUBMISSION,
+      RoomStatus.DEBATE_ROUND_1,
+      RoomStatus.WAITING_REBUTTAL_1,
+      RoomStatus.DEBATE_ROUND_2,
+      RoomStatus.WAITING_REBUTTAL_2,
+      RoomStatus.DEBATE_ROUND_3,
       RoomStatus.AI_PROCESSING
     ].includes(this.data.status);
   }
@@ -256,8 +296,8 @@ export class RoomModel {
 
   getProgress(): { current: number; total: number; percentage: number } {
     const currentOrder = ROOM_STEPS[this.data.status].order;
-    const totalSteps = 5; // 총 5단계 (취소 제외)
-    
+    const totalSteps = 10; // 총 10단계 (취소 제외)
+
     if (currentOrder === -1) { // 취소된 경우
       return { current: 0, total: totalSteps, percentage: 0 };
     }
