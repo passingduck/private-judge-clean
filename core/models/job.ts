@@ -169,7 +169,7 @@ export class JobModel {
   }
 
   get progress(): JobProgress | null {
-    return this.data.progress;
+    return this.data.progress ?? null;
   }
 
   get scheduledAt(): Date {
