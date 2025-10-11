@@ -37,12 +37,12 @@ export const JobSchema = z.object({
   error_message: z.string().nullable(),
   retry_count: z.number().int().min(0).default(0),
   max_retries: z.number().int().min(0).default(3),
-  progress: JobProgressSchema.nullable(),
-  scheduled_at: z.string().datetime('유효하지 않은 예약일 형식입니다'),
-  started_at: z.string().datetime().nullable(),
-  completed_at: z.string().datetime().nullable(),
-  created_at: z.string().datetime('유효하지 않은 생성일 형식입니다'),
-  updated_at: z.string().datetime('유효하지 않은 수정일 형식입니다')
+  progress: JobProgressSchema.nullable().optional(),
+  scheduled_at: z.string(),
+  started_at: z.string().nullable(),
+  completed_at: z.string().nullable(),
+  created_at: z.string(),
+  updated_at: z.string()
 });
 
 // 작업 생성 스키마

@@ -72,21 +72,17 @@ export async function GET(
 
     const supabase = getSupabaseClient(true); // Use service role
 
-    // 방 존재 여부 및 사용자 권한 확인
+    // 방 존재 여부 확인
     const { data: roomData, error: roomError } = await supabase
       .from('rooms')
-      .select(`
-        *,
-        room_members!inner(user_id, role)
-      `)
+      .select('*')
       .eq('id', roomId)
-      .eq('room_members.user_id', userId)
       .single();
 
     if (roomError) {
       if (roomError.code === 'PGRST116') {
         console.error(
-          `[${requestId}] Room not found or access denied for room ${roomId} by user ${userId}`
+          `[${requestId}] Room not found ${roomId}`
         );
         return NextResponse.json(
           { message: '토론방을 찾을 수 없습니다' },
@@ -117,6 +113,17 @@ export async function GET(
     }
 
     const room: Room = roomValidation.data;
+
+    // 사용자 권한 확인 (creator 또는 participant만 접근 가능)
+    if (room.creator_id !== userId && room.participant_id !== userId) {
+      console.warn(
+        `[${requestId}] Access denied for room ${roomId} by user ${userId}`
+      );
+      return NextResponse.json(
+        { message: '이 토론방에 접근할 권한이 없습니다' },
+        { status: 403 }
+      );
+    }
 
     // 작업 목록 조회 쿼리 구성
     let query = supabase

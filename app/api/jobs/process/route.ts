@@ -309,8 +309,8 @@ async function processAIJury(job: Job, aiService: AIService, supabase: any, requ
 
     const vote = await aiService.generateJuryVote(
       motion,
-      argument_a,
-      argument_b,
+      [argument_a],
+      [argument_b],
       debate_sessions,
       jurorPersona,
       requestId
@@ -319,9 +319,9 @@ async function processAIJury(job: Job, aiService: AIService, supabase: any, requ
     const voteData = {
       room_id,
       juror_number: i,
-      vote: vote.vote,
-      reasoning: vote.reasoning,
-      confidence: vote.confidence
+      vote: vote.data?.vote || vote.vote,
+      reasoning: vote.data?.reasoning || vote.reasoning,
+      confidence: vote.data?.confidence || vote.confidence
     };
 
     const { data, error } = await supabase
@@ -378,19 +378,22 @@ async function processAIJudge(job: Job, aiService: AIService, supabase: any, req
 
   const decision = await aiService.generateJudgeDecision(
     motion,
-    argument_a,
-    argument_b,
+    [argument_a],
+    [argument_b],
     debate_sessions,
     judgePersona,
     requestId
   );
 
+  // Extract decision data
+  const decisionData = decision.data || decision;
+
   // 판사 판결 저장
   const judgeDecisionData = {
     room_id,
     decision_type: 'final_verdict',
-    content: decision,
-    reasoning: decision.reasoning
+    content: decisionData,
+    reasoning: decisionData.reasoning
   };
 
   const { data: judgeDecisionRecord, error: judgeError } = await supabase
@@ -403,25 +406,25 @@ async function processAIJudge(job: Job, aiService: AIService, supabase: any, req
     throw new Error(`판사 판결 저장 실패: ${judgeError.message}`);
   }
 
-  // 최종 판결 저장
-  const verdictData = {
-    room_id,
-    winner: decision.winner,
-    reasoning: decision.reasoning,
-    strengths_a: decision.content.analysis_a,
-    weaknesses_a: decision.content.weaknesses_a.join('\n'),
-    strengths_b: decision.content.analysis_b,
-    weaknesses_b: decision.content.weaknesses_b.join('\n'),
-    confidence_score: Math.round((decision.content.score_a + decision.content.score_b) / 2)
-  };
+  // 최종 판결 저장 (TODO: Create verdicts table first)
+  // const verdictData = {
+  //   room_id,
+  //   winner: decisionData.winner,
+  //   reasoning: decisionData.reasoning,
+  //   strengths_a: decisionData.analysis_a,
+  //   weaknesses_a: decisionData.weaknesses_a.join('\n'),
+  //   strengths_b: decisionData.analysis_b,
+  //   weaknesses_b: decisionData.weaknesses_b.join('\n'),
+  //   confidence_score: Math.round((decisionData.score_a + decisionData.score_b) / 2)
+  // };
 
-  const { error: verdictError } = await supabase
-    .from('verdicts')
-    .insert(verdictData);
+  // const { error: verdictError } = await supabase
+  //   .from('verdicts')
+  //   .insert(verdictData);
 
-  if (verdictError) {
-    throw new Error(`최종 판결 저장 실패: ${verdictError.message}`);
-  }
+  // if (verdictError) {
+  //   throw new Error(`최종 판결 저장 실패: ${verdictError.message}`);
+  // }
 
   // Room 상태를 COMPLETED로 변경
   await supabase
@@ -429,11 +432,11 @@ async function processAIJudge(job: Job, aiService: AIService, supabase: any, req
     .update({ status: 'completed', updated_at: new Date().toISOString() })
     .eq('id', room_id);
 
-  console.info('[AI-JUDGE] Judge decision completed', { requestId, winner: decision.winner });
+  console.info('[AI-JUDGE] Judge decision completed', { requestId, winner: decisionData.winner });
 
   return {
-    winner: decision.winner,
-    scoreA: decision.content.score_a,
-    scoreB: decision.content.score_b
+    winner: decisionData.winner,
+    scoreA: decisionData.score_a,
+    scoreB: decisionData.score_b
   };
 }

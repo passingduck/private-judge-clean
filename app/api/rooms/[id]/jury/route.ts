@@ -107,131 +107,45 @@ export async function GET(
 
     const room: Room = roomValidation.data;
 
-    // 토론 세션 조회
-    const { data: sessionData, error: sessionError } = await supabase
-      .from('debate_sessions')
-      .select('id, status, config')
-      .eq('room_id', roomId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (sessionError) {
-      if (sessionError.code === 'PGRST116') {
-        return NextResponse.json(
-          { 
-            error: 'not_found', 
-            message: '토론 세션을 찾을 수 없습니다',
-            requestId 
-          },
-          { status: 404 }
-        );
-      }
-
-      console.error('[jury-api] GET session fetch error', { 
-        requestId, 
-        error: sessionError.message 
-      });
-      return NextResponse.json(
-        { 
-          error: 'database_error', 
-          message: '토론 세션 조회 중 오류가 발생했습니다',
-          requestId 
-        },
-        { status: 500 }
-      );
-    }
-
-    // 배심원 프로필 조회
-    const { data: jurorProfiles, error: jurorProfilesError } = await supabase
-      .from('juror_profiles')
-      .select('*')
-      .eq('session_id', sessionData.id)
-      .order('created_at', { ascending: true });
-
-    if (jurorProfilesError) {
-      console.error('[jury-api] GET juror profiles fetch error', { 
-        requestId, 
-        error: jurorProfilesError.message 
-      });
-      return NextResponse.json(
-        { 
-          error: 'database_error', 
-          message: '배심원 프로필 조회 중 오류가 발생했습니다',
-          requestId 
-        },
-        { status: 500 }
-      );
-    }
-
-    // 배심원 투표 조회
+    // 배심원 투표 조회 (room_id 기반)
     const { data: juryVotes, error: juryVotesError } = await supabase
       .from('jury_votes')
       .select('*')
-      .eq('session_id', sessionData.id)
-      .order('created_at', { ascending: true });
+      .eq('room_id', roomId)
+      .order('juror_number', { ascending: true });
 
     if (juryVotesError) {
-      console.error('[jury-api] GET jury votes fetch error', { 
-        requestId, 
-        error: juryVotesError.message 
+      console.error('[jury-api] GET jury votes fetch error', {
+        requestId,
+        error: juryVotesError.message
       });
       return NextResponse.json(
-        { 
-          error: 'database_error', 
+        {
+          error: 'database_error',
           message: '배심원 투표 조회 중 오류가 발생했습니다',
-          requestId 
+          requestId
         },
         { status: 500 }
       );
     }
-
-    // 배심원별 투표 결과 매핑
-    const jurorVoteMap = new Map();
-    (juryVotes || []).forEach(vote => {
-      jurorVoteMap.set(vote.juror_id, vote);
-    });
-
-    // 배심원 정보와 투표 결과 결합
-    const jurors = (jurorProfiles || []).map(profile => {
-      const vote = jurorVoteMap.get(profile.id);
-      return {
-        id: profile.id,
-        name: profile.name,
-        background: profile.background,
-        expertise: profile.expertise,
-        bias: profile.bias,
-        vote: vote ? {
-          vote: vote.vote,
-          reasoning: vote.reasoning,
-          confidence: vote.confidence,
-          bias_detected: vote.bias_detected,
-          created_at: vote.created_at
-        } : null,
-        has_voted: !!vote,
-        created_at: profile.created_at
-      };
-    });
 
     // 투표 통계 계산
     const votes = juryVotes || [];
     const votesA = votes.filter(vote => vote.vote === 'A').length;
     const votesB = votes.filter(vote => vote.vote === 'B').length;
     const totalVotes = votes.length;
-    const expectedJurors = sessionData.config?.jury_size || 5;
-    
-    const averageConfidence = totalVotes > 0 
-      ? Math.round(votes.reduce((sum, vote) => sum + vote.confidence, 0) / totalVotes * 10) / 10
-      : 0;
+    const expectedJurors = 7; // 기본 배심원 수
 
-    const biasDetectedCount = votes.filter(vote => vote.bias_detected).length;
+    const averageConfidence = totalVotes > 0
+      ? Math.round(votes.reduce((sum, vote) => sum + (vote.confidence || 0), 0) / totalVotes * 10) / 10
+      : 0;
 
     // 합의 수준 계산
     let consensusLevel: 'high' | 'medium' | 'low' = 'low';
     if (totalVotes >= expectedJurors) {
       const majorityVotes = Math.max(votesA, votesB);
       const consensusRatio = majorityVotes / totalVotes;
-      
+
       if (consensusRatio >= 0.8) {
         consensusLevel = 'high';
       } else if (consensusRatio >= 0.6) {
@@ -242,44 +156,33 @@ export async function GET(
     // 투표 진행률 계산
     const votingProgress = Math.round((totalVotes / expectedJurors) * 100);
 
-    console.info('[jury-api] GET success', { 
-      requestId, 
-      roomId, 
+    console.info('[jury-api] GET success', {
+      requestId,
+      roomId,
       userId,
-      sessionId: sessionData.id,
-      totalJurors: jurors.length,
       totalVotes,
       votesA,
       votesB
     });
 
     return NextResponse.json({
-      session_id: sessionData.id,
-      session_status: sessionData.status,
-      jurors,
-      voting_statistics: {
-        total_jurors: jurors.length,
-        expected_jurors: expectedJurors,
+      votes: votes.map((vote: any) => ({
+        id: vote.id,
+        juror_number: vote.juror_number,
+        vote: vote.vote,
+        reasoning: vote.reasoning,
+        confidence: vote.confidence,
+        created_at: vote.created_at
+      })),
+      statistics: {
         total_votes: totalVotes,
         votes_a: votesA,
         votes_b: votesB,
         voting_progress: votingProgress,
         average_confidence: averageConfidence,
-        bias_detected_count: biasDetectedCount,
         consensus_level: consensusLevel,
         is_voting_complete: totalVotes >= expectedJurors,
         majority_side: votesA > votesB ? 'A' : votesB > votesA ? 'B' : null
-      },
-      voting_breakdown: {
-        by_confidence: {
-          high: votes.filter(vote => vote.confidence >= 8).length,
-          medium: votes.filter(vote => vote.confidence >= 6 && vote.confidence < 8).length,
-          low: votes.filter(vote => vote.confidence < 6).length
-        },
-        by_bias_detection: {
-          bias_detected: biasDetectedCount,
-          no_bias: totalVotes - biasDetectedCount
-        }
       },
       room: {
         id: room.id,

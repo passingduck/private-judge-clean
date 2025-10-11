@@ -109,3 +109,12 @@ temp/
 .*
 !.gitignore
 !.env.example
+
+# Temporary script files
+*.js
+!next.config.js
+!jest.config.js
+!tailwind.config.js
+!postcss.config.js
+migrations/
+

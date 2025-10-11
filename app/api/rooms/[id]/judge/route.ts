@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { getSupabaseClient } from '@/data/supabase/client';
-import { Room, RoomModel, RoomStatus } from '@/core/models/room';
-import { Verdict, VerdictModel } from '@/core/models/verdict';
+import { Room, RoomModel } from '@/core/models/room';
 
 interface RouteParams {
   params: Promise<{
@@ -108,181 +107,62 @@ export async function GET(
 
     const room: Room = roomValidation.data;
 
-    // 토론 세션 조회
-    const { data: sessionData, error: sessionError } = await supabase
-      .from('debate_sessions')
-      .select('id, status')
+    // 판사 판결 조회 (room_id 기반)
+    const { data: judgeData, error: judgeError } = await supabase
+      .from('judge_decisions')
+      .select('*')
       .eq('room_id', roomId)
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
 
-    if (sessionError) {
-      if (sessionError.code === 'PGRST116') {
-        return NextResponse.json(
-          { 
-            error: 'not_found', 
-            message: '토론 세션을 찾을 수 없습니다',
-            requestId 
-          },
-          { status: 404 }
-        );
-      }
-
-      console.error('[judge-api] GET session fetch error', { 
-        requestId, 
-        error: sessionError.message 
-      });
-      return NextResponse.json(
-        { 
-          error: 'database_error', 
-          message: '토론 세션 조회 중 오류가 발생했습니다',
-          requestId 
-        },
-        { status: 500 }
-      );
-    }
-
-    // 심판 판결 조회
-    const { data: judgeData, error: judgeError } = await supabase
-      .from('judge_decisions')
-      .select('*')
-      .eq('session_id', sessionData.id)
-      .single();
-
     if (judgeError) {
       if (judgeError.code === 'PGRST116') {
         return NextResponse.json(
-          { 
-            error: 'not_found', 
-            message: '심판 판결이 아직 나오지 않았습니다',
-            requestId 
+          {
+            error: 'not_found',
+            message: '판사 판결이 아직 나오지 않았습니다',
+            requestId
           },
           { status: 404 }
         );
       }
 
-      console.error('[judge-api] GET judge decision fetch error', { 
-        requestId, 
-        error: judgeError.message 
+      console.error('[judge-api] GET judge decision fetch error', {
+        requestId,
+        error: judgeError.message
       });
       return NextResponse.json(
-        { 
-          error: 'database_error', 
-          message: '심판 판결 조회 중 오류가 발생했습니다',
-          requestId 
+        {
+          error: 'database_error',
+          message: '판사 판결 조회 중 오류가 발생했습니다',
+          requestId
         },
         { status: 500 }
       );
     }
 
-    const verdictValidation = VerdictModel.validate(judgeData);
-    if (!verdictValidation.success) {
-      console.error('[judge-api] GET verdict validation failed', { 
-        requestId, 
-        error: verdictValidation.error 
-      });
-      return NextResponse.json(
-        { 
-          error: 'data_error', 
-          message: '심판 판결 데이터가 유효하지 않습니다',
-          requestId 
-        },
-        { status: 500 }
-      );
-    }
+    // content 필드에서 판결 정보 추출
+    const content = judgeData.content || {};
 
-    const verdict: Verdict = verdictValidation.data;
-    const verdictModel = new VerdictModel(verdict);
-
-    // 배심원 투표 조회
-    const { data: juryVotes, error: juryError } = await supabase
-      .from('jury_votes')
-      .select('*')
-      .eq('session_id', sessionData.id)
-      .order('created_at', { ascending: true });
-
-    if (juryError) {
-      console.warn('[judge-api] GET jury votes fetch error', { 
-        requestId, 
-        error: juryError.message 
-      });
-    }
-
-    // 토론 라운드 및 턴 조회
-    const { data: roundsData, error: roundsError } = await supabase
-      .from('rounds')
-      .select(`
-        *,
-        turns:debate_turns(*)
-      `)
-      .eq('session_id', sessionData.id)
-      .order('round_number', { ascending: true });
-
-    if (roundsError) {
-      console.warn('[judge-api] GET rounds fetch error', { 
-        requestId, 
-        error: roundsError.message 
-      });
-    }
-
-    const summary = verdictModel.getSummary();
-
-    console.info('[judge-api] GET success', { 
-      requestId, 
-      roomId, 
+    console.info('[judge-api] GET success', {
+      requestId,
+      roomId,
       userId,
-      sessionId: sessionData.id,
-      winner: verdict.winner,
-      juryVotesCount: juryVotes?.length || 0
+      hasDecision: !!judgeData
     });
 
     return NextResponse.json({
-      session_id: sessionData.id,
-      session_status: sessionData.status,
-      judge_decision: {
-        id: verdict.id,
-        winner: verdict.winner,
-        reasoning: verdict.reasoning,
-        strengths_a: verdict.strengths_a,
-        weaknesses_a: verdict.weaknesses_a,
-        strengths_b: verdict.strengths_b,
-        weaknesses_b: verdict.weaknesses_b,
-        overall_quality: verdict.overall_quality,
-        fairness_score: (verdict as any).fairness_score || 0,
-        clarity_score: (verdict as any).clarity_score || 0,
-        created_at: verdict.created_at
-      },
-      jury_votes: (juryVotes || []).map((vote: any) => ({
-        id: vote.id,
-        juror_id: vote.juror_id,
-        vote: vote.vote,
-        reasoning: vote.reasoning,
-        confidence: vote.confidence,
-        bias_detected: vote.bias_detected,
-        created_at: vote.created_at
-      })),
-      debate_rounds: (roundsData || []).map((round: any) => ({
-        id: round.id,
-        round_number: round.round_number,
-        status: round.status,
-        turns: (round.turns || []).map((turn: any) => ({
-          id: turn.id,
-          turn_number: turn.turn_number,
-          side: turn.side,
-          content: turn.content,
-          created_at: turn.created_at
-        })),
-        started_at: round.started_at,
-        completed_at: round.completed_at
-      })),
-      statistics: {
-        total_rounds: roundsData?.length || 0,
-        total_turns: roundsData?.reduce((sum: number, round: any) => sum + (round.turns?.length || 0), 0) || 0,
-        jury_votes_count: juryVotes?.length || 0,
-        jury_consensus: summary.isUnanimous ? 'high' : summary.isClose ? 'low' : 'medium',
-        average_jury_confidence: summary.averageConfidence,
-        verdict_strength: summary.credibility
+      decision: {
+        id: judgeData.id,
+        winner: content.winner || content.decision,
+        reasoning: content.reasoning,
+        analysis_a: content.analysis_a,
+        analysis_b: content.analysis_b,
+        score_a: content.score_a,
+        score_b: content.score_b,
+        key_factors: content.key_factors || [],
+        created_at: judgeData.created_at
       },
       room: {
         id: room.id,
