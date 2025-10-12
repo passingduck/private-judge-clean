@@ -65,7 +65,7 @@ export type Database = {
           participant_id: string | null;
           title: string;
           description: string | null;
-          status: 'waiting_participant' | 'agenda_negotiation' | 'arguments_submission' | 'ai_processing' | 'completed' | 'cancelled';
+          status: 'waiting_participant' | 'agenda_negotiation' | 'arguments_submission' | 'debate_round_1' | 'waiting_rebuttal_1' | 'debate_round_2' | 'waiting_rebuttal_2' | 'debate_round_3' | 'ai_processing' | 'completed' | 'cancelled';
           created_at: string;
           updated_at: string;
         };
@@ -76,7 +76,7 @@ export type Database = {
           participant_id?: string | null;
           title: string;
           description?: string | null;
-          status?: 'waiting_participant' | 'agenda_negotiation' | 'arguments_submission' | 'ai_processing' | 'completed' | 'cancelled';
+          status?: 'waiting_participant' | 'agenda_negotiation' | 'arguments_submission' | 'debate_round_1' | 'waiting_rebuttal_1' | 'debate_round_2' | 'waiting_rebuttal_2' | 'debate_round_3' | 'ai_processing' | 'completed' | 'cancelled';
           created_at?: string;
           updated_at?: string;
         };
@@ -87,7 +87,7 @@ export type Database = {
           participant_id?: string | null;
           title?: string;
           description?: string | null;
-          status?: 'waiting_participant' | 'agenda_negotiation' | 'arguments_submission' | 'ai_processing' | 'completed' | 'cancelled';
+          status?: 'waiting_participant' | 'agenda_negotiation' | 'arguments_submission' | 'debate_round_1' | 'waiting_rebuttal_1' | 'debate_round_2' | 'waiting_rebuttal_2' | 'debate_round_3' | 'ai_processing' | 'completed' | 'cancelled';
           updated_at?: string;
         };
       };
