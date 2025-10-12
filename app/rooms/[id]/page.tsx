@@ -73,7 +73,12 @@ const statusLabels: Record<string, string> = {
   'waiting_participant': '참가자 대기',
   'agenda_negotiation': '안건 협상',
   'arguments_submission': '주장 제출',
-  'ai_processing': 'AI 토론 진행',
+  'debate_round_1': '1차 AI 토론 진행',
+  'waiting_rebuttal_1': '1차 반론 대기',
+  'debate_round_2': '2차 AI 토론 진행',
+  'waiting_rebuttal_2': '2차 반론 대기',
+  'debate_round_3': '3차 AI 토론 진행',
+  'ai_processing': 'AI 판결 진행',
   'completed': '토론 완료',
   'cancelled': '취소됨'
 };
@@ -82,6 +87,11 @@ const statusVariants: Record<string, 'default' | 'primary' | 'success' | 'warnin
   'waiting_participant': 'primary',
   'agenda_negotiation': 'warning',
   'arguments_submission': 'warning',
+  'debate_round_1': 'primary',
+  'waiting_rebuttal_1': 'warning',
+  'debate_round_2': 'primary',
+  'waiting_rebuttal_2': 'warning',
+  'debate_round_3': 'primary',
   'ai_processing': 'primary',
   'completed': 'success',
   'cancelled': 'error'
@@ -128,12 +138,21 @@ export default function RoomDetailPage() {
     }
   }, [roomId]);
 
-  // Auto-refresh jobs and debate turns when ai_processing or completed
+  // Auto-refresh jobs and debate turns when AI is processing
   useEffect(() => {
-    if (room?.status === 'ai_processing' || room?.status === 'completed') {
+    const aiProcessingStatuses = [
+      'debate_round_1',
+      'debate_round_2',
+      'debate_round_3',
+      'ai_processing',
+      'completed'
+    ];
+
+    if (room?.status && aiProcessingStatuses.includes(room.status)) {
       const interval = setInterval(() => {
         fetchJobs();
         fetchDebateTurns();
+        fetchRoomDetails(); // Also refresh room status
       }, 5000); // Refresh every 5 seconds
 
       return () => clearInterval(interval);
@@ -357,7 +376,23 @@ export default function RoomDetailPage() {
   };
 
   const getCurrentStepIndex = (status: string) => {
-    const index = stepperSteps.findIndex(step => step.id === status);
+    // Map all debate round statuses to the simplified 5-step progress
+    const statusToStepMap: Record<string, string> = {
+      'waiting_participant': 'waiting_participant',
+      'agenda_negotiation': 'agenda_negotiation',
+      'arguments_submission': 'arguments_submission',
+      'debate_round_1': 'ai_processing',
+      'waiting_rebuttal_1': 'ai_processing',
+      'debate_round_2': 'ai_processing',
+      'waiting_rebuttal_2': 'ai_processing',
+      'debate_round_3': 'ai_processing',
+      'ai_processing': 'ai_processing',
+      'completed': 'completed',
+      'cancelled': 'completed'
+    };
+
+    const mappedStatus = statusToStepMap[status] || status;
+    const index = stepperSteps.findIndex(step => step.id === mappedStatus);
     return index >= 0 ? index : 0;
   };
 
@@ -564,7 +599,7 @@ export default function RoomDetailPage() {
             )}
 
             {/* AI 토론 결과 */}
-            {(room.status === 'ai_processing' || room.status === 'completed') && debateTurns.length > 0 && (
+            {(['debate_round_1', 'waiting_rebuttal_1', 'debate_round_2', 'waiting_rebuttal_2', 'debate_round_3', 'ai_processing', 'completed'].includes(room.status)) && debateTurns.length > 0 && (
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex items-center mb-4">
                   <ScaleIcon className="h-5 w-5 text-primary-accent mr-2" />
@@ -874,13 +909,35 @@ export default function RoomDetailPage() {
                 )}
 
                 {room.status === 'agenda_negotiation' && (
-                  <Link
-                    href={`/rooms/${room.id}/motion`}
-                    className="w-full bg-primary-accent text-white px-4 py-2 rounded-md hover:bg-indigo-700 active:bg-indigo-800 transition-colors flex items-center justify-center"
-                  >
-                    <DocumentTextIcon className="h-4 w-4 mr-2" />
-                    안건 관리
-                  </Link>
+                  <>
+                    {motion && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
+                        <h3 className="font-semibold text-blue-900 mb-2 flex items-center">
+                          <DocumentTextIcon className="h-4 w-4 mr-2" />
+                          현재 안건
+                        </h3>
+                        <p className="text-sm text-gray-700 font-medium mb-1">{motion.title}</p>
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            motion.status === 'agreed' ? 'bg-green-100 text-green-700' :
+                            motion.status === 'proposed' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {motion.status === 'agreed' ? '합의됨' :
+                             motion.status === 'proposed' ? '제안됨' :
+                             motion.status}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    <Link
+                      href={`/rooms/${room.id}/motion`}
+                      className="w-full bg-primary-accent text-white px-4 py-2 rounded-md hover:bg-indigo-700 active:bg-indigo-800 transition-colors flex items-center justify-center"
+                    >
+                      <DocumentTextIcon className="h-4 w-4 mr-2" />
+                      {motion ? '안건 수정' : '안건 제안'}
+                    </Link>
+                  </>
                 )}
 
                 {room.status === 'arguments_submission' && (
@@ -907,7 +964,7 @@ export default function RoomDetailPage() {
                 )}
 
                 {/* AI 처리 진행 상황 */}
-                {room.status === 'ai_processing' && (
+                {(['debate_round_1', 'waiting_rebuttal_1', 'debate_round_2', 'waiting_rebuttal_2', 'debate_round_3', 'ai_processing'].includes(room.status)) && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-center mb-3">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
