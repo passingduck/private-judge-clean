@@ -12,6 +12,27 @@ export async function POST(request: NextRequest) {
   console.info('[jobs-process-api] POST start', { requestId });
 
   try {
+    // Worker 인증 확인
+    const WORKER_SECRET = process.env.WORKER_SECRET;
+    if (!WORKER_SECRET) {
+      console.error('[jobs-process-api] WORKER_SECRET not configured', { requestId });
+      return NextResponse.json(
+        { error: 'server_config_error', message: 'Worker 인증이 설정되지 않았습니다', requestId },
+        { status: 500 }
+      );
+    }
+
+    const authHeader = request.headers.get('authorization');
+    const expectedAuth = `Bearer ${WORKER_SECRET}`;
+
+    if (authHeader !== expectedAuth) {
+      console.warn('[jobs-process-api] Unauthorized worker access attempt', { requestId, authHeader: authHeader?.substring(0, 20) });
+      return NextResponse.json(
+        { error: 'forbidden', message: 'Worker 인증이 필요합니다', requestId },
+        { status: 403 }
+      );
+    }
+
     const supabase = getSupabaseClient(true); // service role
     const aiService = new AIService();
 
@@ -130,22 +151,40 @@ async function processAIDebate(job: Job, aiService: AIService, supabase: any, re
 
   console.info('[AI-DEBATE] Starting debate', { requestId, roomId: room_id, round });
 
-  // 변호사 persona 생성
-  const lawyerAPersona = {
-    id: 'lawyer-a',
-    name: 'AI 변호사 A',
+  // 변호사 persona 정의
+  const analyticalPersona = {
+    id: 'lawyer-analytical',
+    name: 'AI 변호사 (논리형)',
     specialty: '논리적 분석',
     style: 'analytical' as const,
     background: '10년 경력의 논리적 사고를 중시하는 변호사'
   };
 
-  const lawyerBPersona = {
-    id: 'lawyer-b',
-    name: 'AI 변호사 B',
+  const diplomaticPersona = {
+    id: 'lawyer-diplomatic',
+    name: 'AI 변호사 (설득형)',
     specialty: '감정적 설득',
     style: 'diplomatic' as const,
     background: '8년 경력의 설득력 있는 변호사'
   };
+
+  // 공정성: room_id를 기반으로 persona 랜덤 할당
+  // UUID의 첫 8자를 16진수로 파싱하여 seed 생성
+  const seedHex = room_id.replace(/-/g, '').substring(0, 8);
+  const seed = parseInt(seedHex, 16);
+  const shouldSwap = seed % 2 === 1;
+
+  const lawyerAPersona = shouldSwap ? diplomaticPersona : analyticalPersona;
+  const lawyerBPersona = shouldSwap ? analyticalPersona : diplomaticPersona;
+
+  console.info('[AI-DEBATE] Lawyer personas assigned', {
+    requestId,
+    roomId: room_id,
+    seed,
+    shouldSwap,
+    lawyerA: lawyerAPersona.style,
+    lawyerB: lawyerBPersona.style
+  });
 
   // A측 변호사 응답 생성
   const responseA = await aiService.generateLawyerResponse(
@@ -281,15 +320,20 @@ async function processAIJury(job: Job, aiService: AIService, supabase: any, requ
 
   console.info('[AI-JURY] Starting jury voting', { requestId, roomId: room_id });
 
-  // 7명의 배심원 투표 생성
+  // 다양한 배경의 배심원 페르소나 가져오기
+  const jurorPersonas = AIService.getDefaultJurorPersonas();
+
+  // 7명의 배심원 투표 생성 (각기 다른 페르소나 사용)
   const juryVotes = [];
   for (let i = 1; i <= 7; i++) {
-    const jurorPersona = {
-      id: `juror-${i}`,
-      name: `배심원 ${i}`,
-      background: `다양한 관점을 가진 배심원 ${i}`,
-      expertise: i <= 3 ? '법률' : i <= 5 ? '사회과학' : '인문학'
-    };
+    const jurorPersona = jurorPersonas[i - 1]; // 0-indexed array
+
+    console.info('[AI-JURY] Juror voting', {
+      requestId,
+      jurorNumber: i,
+      jurorName: jurorPersona.name,
+      jurorBackground: jurorPersona.background
+    });
 
     const vote = await aiService.generateJuryVote(
       motion,

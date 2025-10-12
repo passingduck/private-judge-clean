@@ -1,0 +1,4 @@
+user1_id : hersungjin23@naver.com
+user1_password : 12345678
+user2_id : hersungjin23@gmail.com
+user2_password : 12345678

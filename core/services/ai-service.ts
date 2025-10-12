@@ -637,32 +637,44 @@ ${juryVotesText}
       {
         id: 'juror_citizen',
         name: '최시민',
-        background: '30대 직장인, 평범한 시민의 관점에서 판단',
+        background: '30대 남성 직장인, 평범한 시민의 관점에서 판단, 중도 성향',
         expertise: '일반 상식'
       },
       {
         id: 'juror_academic',
         name: '정교수',
-        background: '40대 대학교수, 학술적 관점에서 접근',
+        background: '40대 여성 대학교수, 학술적 관점에서 접근, 진보적 성향',
         expertise: '교육학'
       },
       {
         id: 'juror_business',
         name: '한사장',
-        background: '50대 기업인, 실무적 관점에서 판단',
+        background: '50대 남성 기업인, 실무적·경제적 관점에서 판단, 보수적 실용주의',
         expertise: '경영학'
       },
       {
         id: 'juror_youth',
         name: '윤청년',
-        background: '20대 대학생, 젊은 세대의 시각으로 접근',
-        expertise: '디지털 문화'
+        background: '20대 여성 대학생, 환경운동가, 젊은 세대와 미래 지향적 시각',
+        expertise: '디지털 문화, 환경'
       },
       {
         id: 'juror_senior',
         name: '노어른',
-        background: '60대 은퇴자, 인생 경험을 바탕으로 판단',
+        background: '60대 남성 은퇴자, 인생 경험과 전통적 가치를 중시',
         expertise: '인생 경험'
+      },
+      {
+        id: 'juror_lawyer',
+        name: '김변호사',
+        background: '35세 여성 법률가, 인권 전문, 법리적·윤리적 관점 중시',
+        expertise: '법률, 인권'
+      },
+      {
+        id: 'juror_journalist',
+        name: '박기자',
+        background: '42세 남성 탐사보도 기자, 비판적 사고와 증거 기반 판단',
+        expertise: '언론, 사실 검증'
       }
     ];
   }

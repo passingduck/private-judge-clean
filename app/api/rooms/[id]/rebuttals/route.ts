@@ -87,6 +87,7 @@ export async function GET(
 
     // 반론 조회 (라운드 지정 여부에 따라 다르게 조회)
     let rebuttals;
+    let currentRound: number | null = null;
     if (roundNumber) {
       const round = parseInt(roundNumber, 10);
       if (![1, 2].includes(round)) {
@@ -99,6 +100,7 @@ export async function GET(
           { status: 400 }
         );
       }
+      currentRound = round;
       rebuttals = await rebuttalQueries.getByRoomIdAndRound(roomId, round);
     } else {
       rebuttals = await rebuttalQueries.getByRoomId(roomId);
@@ -106,14 +108,31 @@ export async function GET(
 
     // 내 반론과 상대방 반론 분리
     const myRebuttals = rebuttals.filter((r: any) => r.user_id === userId);
-    const opponentRebuttals = rebuttals.filter((r: any) => r.user_id !== userId);
+
+    // 공정성: 현재 사용자가 해당 라운드에 반론을 제출한 경우에만 상대방 반론 공개
+    let opponentRebuttals = rebuttals.filter((r: any) => r.user_id !== userId);
+    let canViewOpponent = true;
+
+    if (currentRound !== null) {
+      // 특정 라운드 조회시: 사용자가 해당 라운드에 제출했는지 확인
+      const hasUserSubmittedThisRound = myRebuttals.some(
+        (r: any) => r.round_number === currentRound
+      );
+      canViewOpponent = hasUserSubmittedThisRound;
+
+      // 제출하지 않았다면 상대방 반론 숨김
+      if (!canViewOpponent) {
+        opponentRebuttals = [];
+      }
+    }
 
     console.info('[rebuttals-api] GET success', {
       requestId,
       roomId,
       userId,
       myRebuttalsCount: myRebuttals.length,
-      opponentRebuttalsCount: opponentRebuttals.length
+      opponentRebuttalsCount: opponentRebuttals.length,
+      canViewOpponent
     });
 
     return NextResponse.json({
@@ -121,6 +140,7 @@ export async function GET(
       opponent_rebuttals: opponentRebuttals,
       all_rebuttals: rebuttals,
       user_side: userMember.side,
+      can_view_opponent: canViewOpponent,
       requestId
     }, { status: 200 });
 
