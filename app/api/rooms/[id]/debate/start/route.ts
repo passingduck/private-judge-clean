@@ -216,14 +216,13 @@ export async function POST(
     }
 
     // 방 상태를 1차 토론으로 변경
-    const { error: statusUpdateError } = await supabase.rpc(
-      'update_room_status',
-      {
-        p_room_id: roomId,
-        p_new_status: RoomStatus.DEBATE_ROUND_1,
-        p_user_id: userId
-      }
-    );
+    const { error: statusUpdateError } = await supabase
+      .from('rooms')
+      .update({
+        status: RoomStatus.DEBATE_ROUND_1,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', roomId);
 
     if (statusUpdateError) {
       console.error('[debate-start-api] POST status update error', {
