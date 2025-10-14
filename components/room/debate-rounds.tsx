@@ -28,6 +28,20 @@ interface DebateRoundsProps {
 const DebateRounds = React.memo<DebateRoundsProps>(({ debateTurns, roomStatus }) => {
   const [expandedRounds, setExpandedRounds] = useState<Set<string>>(new Set());
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('[DebateRounds] Props updated:', {
+      roomStatus,
+      debateTurnsCount: debateTurns.length,
+      debateTurns: debateTurns.map(r => ({
+        id: r.id,
+        round_number: r.round_number,
+        status: r.status,
+        turnsCount: r.turns?.length || 0
+      }))
+    });
+  }, [debateTurns, roomStatus]);
+
   const toggleRound = useCallback((roundId: string) => {
     setExpandedRounds(prev => {
       const newSet = new Set(prev);

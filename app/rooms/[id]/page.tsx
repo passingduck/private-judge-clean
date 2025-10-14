@@ -319,10 +319,17 @@ export default function RoomDetailPage() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('[fetchDebateTurns] Data received:', {
+          roundsCount: data.rounds?.length || 0,
+          rounds: data.rounds,
+          statistics: data.statistics
+        });
         setDebateTurns(data.rounds || []);
+      } else {
+        console.error('[fetchDebateTurns] Response not ok:', response.status, response.statusText);
       }
     } catch (err) {
-      console.log('Error fetching debate turns:', err);
+      console.error('[fetchDebateTurns] Error:', err);
     }
   };
 
@@ -684,36 +691,37 @@ export default function RoomDetailPage() {
                   </button>
                 )}
 
+                {/* 안건 관리 버튼 - agenda_negotiation 상태에서만 표시 */}
                 {room.status === 'agenda_negotiation' && (
-                  <>
-                    {motion && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
-                        <h3 className="font-semibold text-blue-900 mb-2 flex items-center">
-                          <DocumentTextIcon className="h-4 w-4 mr-2" />
-                          현재 안건
-                        </h3>
-                        <p className="text-sm text-gray-700 font-medium mb-1">{motion.title}</p>
-                        <div className="flex items-center justify-between">
-                          <span className={`text-xs px-2 py-1 rounded ${
-                            motion.status === 'agreed' ? 'bg-green-100 text-green-700' :
-                            motion.status === 'proposed' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {motion.status === 'agreed' ? '합의됨' :
-                             motion.status === 'proposed' ? '제안됨' :
-                             motion.status}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    <Link
-                      href={`/rooms/${room.id}/motion`}
-                      className="w-full bg-primary-accent text-white px-4 py-2 rounded-md hover:bg-indigo-700 active:bg-indigo-800 transition-colors flex items-center justify-center"
-                    >
+                  <Link
+                    href={`/rooms/${room.id}/motion`}
+                    className="w-full bg-primary-accent text-white px-4 py-2 rounded-md hover:bg-indigo-700 active:bg-indigo-800 transition-colors flex items-center justify-center"
+                  >
+                    <DocumentTextIcon className="h-4 w-4 mr-2" />
+                    {motion ? '안건 수정' : '안건 제안'}
+                  </Link>
+                )}
+
+                {/* 현재 안건 표시 - 안건이 있으면 모든 상태에서 표시 */}
+                {motion && room.status !== 'waiting_participant' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-blue-900 mb-2 flex items-center">
                       <DocumentTextIcon className="h-4 w-4 mr-2" />
-                      {motion ? '안건 수정' : '안건 제안'}
-                    </Link>
-                  </>
+                      현재 안건
+                    </h3>
+                    <p className="text-sm text-gray-700 font-medium mb-1">{motion.title}</p>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        motion.status === 'agreed' ? 'bg-green-100 text-green-700' :
+                        motion.status === 'proposed' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {motion.status === 'agreed' ? '합의됨' :
+                         motion.status === 'proposed' ? '제안됨' :
+                         motion.status}
+                      </span>
+                    </div>
+                  </div>
                 )}
 
                 {room.status === 'arguments_submission' && (
