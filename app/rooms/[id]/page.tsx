@@ -5,21 +5,19 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeftIcon,
-  UserGroupIcon,
-  ClockIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
   PlayIcon,
   DocumentTextIcon,
-  ScaleIcon,
   UserPlusIcon,
   XMarkIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  TrophyIcon
+  UserGroupIcon
 } from '@heroicons/react/24/outline';
 import { Badge } from '@/components/ui/badge';
 import Stepper from '@/components/ui/stepper';
+import JobsProgress from '@/components/room/jobs-progress';
+import DebateRounds from '@/components/room/debate-rounds';
+import JuryVotes from '@/components/room/jury-votes';
+import JudgeDecision from '@/components/room/judge-decision';
 
 interface Room {
   id: string;
@@ -58,7 +56,7 @@ interface JuryVote {
   created_at: string;
 }
 
-interface JudgeDecision {
+interface JudgeDecisionData {
   id: string;
   winner: 'A' | 'B';
   score_a: number;
@@ -125,8 +123,7 @@ export default function RoomDetailPage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [debateTurns, setDebateTurns] = useState<any[]>([]);
   const [juryVotes, setJuryVotes] = useState<JuryVote[]>([]);
-  const [judgeDecision, setJudgeDecision] = useState<JudgeDecision | null>(null);
-  const [expandedRounds, setExpandedRounds] = useState<Set<string>>(new Set());
+  const [judgeDecision, setJudgeDecision] = useState<JudgeDecisionData | null>(null);
 
   useEffect(() => {
     if (roomId) {
@@ -144,20 +141,42 @@ export default function RoomDetailPage() {
       'debate_round_1',
       'debate_round_2',
       'debate_round_3',
-      'ai_processing',
-      'completed'
+      'ai_processing'
     ];
 
     if (room?.status && aiProcessingStatuses.includes(room.status)) {
       const interval = setInterval(() => {
+        // Only fetch jobs and debate turns - not room details
+        // This prevents unnecessary full page re-renders
         fetchJobs();
         fetchDebateTurns();
-        fetchRoomDetails(); // Also refresh room status
       }, 5000); // Refresh every 5 seconds
 
       return () => clearInterval(interval);
     }
   }, [room?.status, roomId]);
+
+  // Check if AI processing is complete and update room status
+  useEffect(() => {
+    const aiProcessingStatuses = [
+      'debate_round_1',
+      'debate_round_2',
+      'debate_round_3',
+      'ai_processing'
+    ];
+
+    if (room?.status && aiProcessingStatuses.includes(room.status) && jobs.length > 0) {
+      // Check if all jobs are completed (not queued or running)
+      const hasActiveJobs = jobs.some(job =>
+        job.status === 'queued' || job.status === 'running'
+      );
+
+      // If no active jobs and we're still in processing status, refresh room to check if completed
+      if (!hasActiveJobs) {
+        fetchRoomDetails();
+      }
+    }
+  }, [jobs, room?.status]);
 
   // Fetch jury votes and judge decision when completed
   useEffect(() => {
@@ -363,18 +382,6 @@ export default function RoomDetailPage() {
     }
   };
 
-  const toggleRound = (roundId: string) => {
-    setExpandedRounds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(roundId)) {
-        newSet.delete(roundId);
-      } else {
-        newSet.add(roundId);
-      }
-      return newSet;
-    });
-  };
-
   const getCurrentStepIndex = (status: string) => {
     // Map all debate round statuses to the simplified 5-step progress
     const statusToStepMap: Record<string, string> = {
@@ -410,21 +417,6 @@ export default function RoomDetailPage() {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const calculateJuryStats = () => {
-    if (juryVotes.length === 0) return { totalVotes: 0, votesA: 0, votesB: 0, avgConfidence: 0 };
-
-    const votesA = juryVotes.filter(v => v.vote === 'A').length;
-    const votesB = juryVotes.filter(v => v.vote === 'B').length;
-    const avgConfidence = juryVotes.reduce((sum, v) => sum + v.confidence, 0) / juryVotes.length;
-
-    return {
-      totalVotes: juryVotes.length,
-      votesA,
-      votesB,
-      avgConfidence: Math.round(avgConfidence * 100) / 100
-    };
   };
 
   if (loading) {
@@ -469,7 +461,6 @@ export default function RoomDetailPage() {
   }
 
   const currentStepIndex = getCurrentStepIndex(room.status);
-  const juryStats = calculateJuryStats();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -599,228 +590,13 @@ export default function RoomDetailPage() {
             )}
 
             {/* AI 토론 결과 */}
-            {(['debate_round_1', 'waiting_rebuttal_1', 'debate_round_2', 'waiting_rebuttal_2', 'debate_round_3', 'ai_processing', 'completed'].includes(room.status)) && debateTurns.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center mb-4">
-                  <ScaleIcon className="h-5 w-5 text-primary-accent mr-2" />
-                  <h2 className="text-lg font-semibold text-gray-900">AI 토론 결과</h2>
-                </div>
-
-                <div className="space-y-4">
-                  {debateTurns.map((round) => {
-                    const isExpanded = expandedRounds.has(round.id);
-                    return (
-                      <div key={round.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                        <button
-                          onClick={() => toggleRound(round.id)}
-                          className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 transition-colors flex items-center justify-between"
-                        >
-                          <div className="flex items-center">
-                            <h3 className="font-semibold text-gray-900">
-                              {round.round_number}차 토론
-                            </h3>
-                            {round.status === 'completed' && (
-                              <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">완료</span>
-                            )}
-                            {round.status === 'in_progress' && (
-                              <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">진행 중</span>
-                            )}
-                          </div>
-                          {isExpanded ? (
-                            <ChevronUpIcon className="h-5 w-5 text-gray-500" />
-                          ) : (
-                            <ChevronDownIcon className="h-5 w-5 text-gray-500" />
-                          )}
-                        </button>
-
-                        {isExpanded && (
-                          <div className="p-4">
-                            {round.turns && round.turns.length > 0 ? (
-                              <div className="space-y-4">
-                                {round.turns.map((turn: any) => (
-                                  <div key={turn.id} className={`p-4 rounded-lg ${
-                                    turn.side === 'A' ? 'bg-blue-50 border-l-4 border-blue-500' : 'bg-green-50 border-l-4 border-green-500'
-                                  }`}>
-                                    <div className="flex items-center mb-2">
-                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3 ${
-                                        turn.side === 'A' ? 'bg-primary-accent' : 'bg-green-500'
-                                      }`}>
-                                        {turn.side}
-                                      </div>
-                                      <span className="font-medium text-gray-900">
-                                        {turn.side === 'A' ? 'AI 변호사 A' : 'AI 변호사 B'}
-                                      </span>
-                                    </div>
-
-                                    {turn.content?.data?.statement && (
-                                      <p className="text-gray-700 whitespace-pre-wrap mb-3">{turn.content.data.statement}</p>
-                                    )}
-
-                                    {turn.content?.data?.key_points && turn.content.data.key_points.length > 0 && (
-                                      <div className="mb-3">
-                                        <p className="text-sm font-semibold text-gray-700 mb-1">핵심 포인트:</p>
-                                        <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                                          {turn.content.data.key_points.map((point: string, idx: number) => (
-                                            <li key={idx}>{point}</li>
-                                          ))}
-                                        </ul>
-                                      </div>
-                                    )}
-
-                                    {turn.content?.data?.counter_arguments && turn.content.data.counter_arguments.length > 0 && (
-                                      <div>
-                                        <p className="text-sm font-semibold text-gray-700 mb-1">반박 논리:</p>
-                                        <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                                          {turn.content.data.counter_arguments.map((arg: string, idx: number) => (
-                                            <li key={idx}>{arg}</li>
-                                          ))}
-                                        </ul>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-gray-500 text-sm">토론 내용을 불러오는 중...</p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            <DebateRounds debateTurns={debateTurns} roomStatus={room.status} />
 
             {/* 배심원 투표 결과 */}
-            {room.status === 'completed' && juryVotes.length > 0 && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center mb-4">
-                  <UserGroupIcon className="h-5 w-5 text-primary-accent mr-2" />
-                  <h2 className="text-lg font-semibold text-gray-900">배심원 투표 결과</h2>
-                </div>
-
-                {/* 투표 통계 */}
-                <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500 mb-1">총 투표 수</p>
-                    <p className="text-2xl font-bold text-gray-900">{juryStats.totalVotes}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500 mb-1">A측 득표</p>
-                    <p className="text-2xl font-bold text-blue-600">{juryStats.votesA}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500 mb-1">B측 득표</p>
-                    <p className="text-2xl font-bold text-green-600">{juryStats.votesB}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500 mb-1">평균 신뢰도</p>
-                    <p className="text-2xl font-bold text-purple-600">{juryStats.avgConfidence}</p>
-                  </div>
-                </div>
-
-                {/* 배심원 투표 카드 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {juryVotes
-                    .sort((a, b) => a.jury_number - b.jury_number)
-                    .map((vote) => (
-                      <div
-                        key={vote.id}
-                        className={`p-4 rounded-lg border-2 ${
-                          vote.vote === 'A'
-                            ? 'bg-blue-50 border-blue-200'
-                            : 'bg-green-50 border-green-200'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold mr-2 ${
-                              vote.vote === 'A' ? 'bg-blue-600' : 'bg-green-600'
-                            }`}>
-                              {vote.jury_number}
-                            </div>
-                            <span className="font-semibold text-gray-900">배심원 {vote.jury_number}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                              vote.vote === 'A'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-green-600 text-white'
-                            }`}>
-                              {vote.vote}측
-                            </span>
-                            <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
-                              신뢰도: {vote.confidence}
-                            </span>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{vote.reasoning}</p>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
+            <JuryVotes juryVotes={juryVotes} roomStatus={room.status} />
 
             {/* 최종 판결 */}
-            {room.status === 'completed' && judgeDecision && (
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg shadow-lg p-6 border-2 border-amber-200">
-                <div className="flex items-center mb-6">
-                  <TrophyIcon className="h-6 w-6 text-amber-600 mr-2" />
-                  <h2 className="text-2xl font-bold text-gray-900">최종 판결</h2>
-                </div>
-
-                {/* 승자 표시 */}
-                <div className="bg-white rounded-lg p-6 mb-6 text-center border-2 border-amber-300">
-                  <p className="text-lg text-gray-600 mb-2">승자</p>
-                  <div className="flex items-center justify-center">
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-3xl font-bold mr-4 ${
-                      judgeDecision.winner === 'A' ? 'bg-blue-600' : 'bg-green-600'
-                    }`}>
-                      {judgeDecision.winner}
-                    </div>
-                    <span className={`text-4xl font-bold ${
-                      judgeDecision.winner === 'A' ? 'text-blue-600' : 'text-green-600'
-                    }`}>
-                      {judgeDecision.winner}측 승리
-                    </span>
-                  </div>
-                </div>
-
-                {/* 점수 표시 */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-white rounded-lg p-4 text-center border-2 border-blue-200">
-                    <p className="text-sm text-gray-500 mb-1">A측 점수</p>
-                    <p className="text-3xl font-bold text-blue-600">{judgeDecision.score_a}</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-4 text-center border-2 border-green-200">
-                    <p className="text-sm text-gray-500 mb-1">B측 점수</p>
-                    <p className="text-3xl font-bold text-green-600">{judgeDecision.score_b}</p>
-                  </div>
-                </div>
-
-                {/* 판결 이유 */}
-                <div className="bg-white rounded-lg p-4 mb-4">
-                  <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
-                    <ScaleIcon className="h-5 w-5 text-amber-600 mr-2" />
-                    판결 이유
-                  </h3>
-                  <p className="text-gray-700 whitespace-pre-wrap">{judgeDecision.reasoning}</p>
-                </div>
-
-                {/* A측 분석 */}
-                <div className="bg-blue-50 rounded-lg p-4 mb-4 border-l-4 border-blue-500">
-                  <h3 className="font-semibold text-blue-900 mb-2">A측 분석</h3>
-                  <p className="text-gray-700 whitespace-pre-wrap">{judgeDecision.analysis_a}</p>
-                </div>
-
-                {/* B측 분석 */}
-                <div className="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
-                  <h3 className="font-semibold text-green-900 mb-2">B측 분석</h3>
-                  <p className="text-gray-700 whitespace-pre-wrap">{judgeDecision.analysis_b}</p>
-                </div>
-              </div>
-            )}
+            <JudgeDecision judgeDecision={judgeDecision} roomStatus={room.status} />
           </div>
 
           {/* Sidebar */}
@@ -964,54 +740,7 @@ export default function RoomDetailPage() {
                 )}
 
                 {/* AI 처리 진행 상황 */}
-                {(['debate_round_1', 'waiting_rebuttal_1', 'debate_round_2', 'waiting_rebuttal_2', 'debate_round_3', 'ai_processing'].includes(room.status)) && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center mb-3">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
-                      <h3 className="font-semibold text-blue-900">AI 토론 진행 중</h3>
-                    </div>
-
-                    {jobs.length > 0 ? (
-                      <div className="space-y-2">
-                        {jobs
-                          .filter(job => job.status === 'queued' || job.status === 'running')
-                          .map((job, index) => (
-                          <div key={job.id} className="bg-white rounded p-3 text-sm">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-medium text-gray-900">
-                                {job.type === 'ai_debate' && `${job.payload?.round || 1}차 토론`}
-                                {job.type === 'ai_judge' && '판결 생성'}
-                                {job.type === 'ai_jury' && '배심원 투표'}
-                              </span>
-                              <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                job.status === 'queued' ? 'bg-gray-100 text-gray-700' :
-                                job.status === 'running' ? 'bg-blue-100 text-blue-700' :
-                                'bg-gray-100 text-gray-700'
-                              }`}>
-                                {job.status === 'queued' && '대기 중'}
-                                {job.status === 'running' && '실행 중'}
-                              </span>
-                            </div>
-                            {job.error_message && (
-                              <p className="text-red-600 text-xs mt-1">{job.error_message}</p>
-                            )}
-                            {job.started_at && (
-                              <p className="text-gray-500 text-xs mt-1">
-                                시작: {new Date(job.started_at).toLocaleTimeString('ko-KR')}
-                              </p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-blue-700 text-sm">작업 정보를 불러오는 중...</p>
-                    )}
-
-                    <p className="text-blue-700 text-xs mt-3">
-                      AI 토론은 약 10-15분이 소요됩니다. 페이지를 나가셔도 처리는 계속됩니다.
-                    </p>
-                  </div>
-                )}
+                <JobsProgress jobs={jobs} roomStatus={room.status} />
 
                 {/* 방 나가기 버튼 - 참가자만 표시 */}
                 {userInfo && !userInfo.is_creator && room.participant && (
