@@ -19,14 +19,15 @@ interface JobsProgressProps {
 const JobsProgress = React.memo<JobsProgressProps>(({ jobs, roomStatus }) => {
   const aiProcessingStatuses = [
     'debate_round_1',
-    'waiting_rebuttal_1',
     'debate_round_2',
-    'waiting_rebuttal_2',
     'debate_round_3',
     'ai_processing'
   ];
 
-  if (!aiProcessingStatuses.includes(roomStatus)) {
+  // Only show if there are active jobs (queued or running)
+  const activeJobs = jobs.filter(job => job.status === 'queued' || job.status === 'running');
+
+  if (!aiProcessingStatuses.includes(roomStatus) || activeJobs.length === 0) {
     return null;
   }
 
@@ -37,11 +38,9 @@ const JobsProgress = React.memo<JobsProgressProps>(({ jobs, roomStatus }) => {
         <h3 className="font-semibold text-blue-900">AI 토론 진행 중</h3>
       </div>
 
-      {jobs.length > 0 ? (
+      {activeJobs.length > 0 ? (
         <div className="space-y-2">
-          {jobs
-            .filter(job => job.status === 'queued' || job.status === 'running')
-            .map((job) => (
+          {activeJobs.map((job) => (
               <div key={job.id} className="bg-white rounded p-3 text-sm">
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-medium text-gray-900">
