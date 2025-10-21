@@ -25,8 +25,23 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     const expectedAuth = `Bearer ${WORKER_SECRET}`;
 
+    // 디버깅: 인증 헤더 길이와 기대값 길이 비교
+    console.info('[jobs-process-api] Auth debug', {
+      requestId,
+      authHeaderLength: authHeader?.length,
+      expectedAuthLength: expectedAuth.length,
+      authHeaderPrefix: authHeader?.substring(0, 20),
+      expectedPrefix: expectedAuth.substring(0, 20),
+      secretLength: WORKER_SECRET.length,
+      match: authHeader === expectedAuth
+    });
+
     if (authHeader !== expectedAuth) {
-      console.warn('[jobs-process-api] Unauthorized worker access attempt', { requestId, authHeader: authHeader?.substring(0, 20) });
+      console.warn('[jobs-process-api] Unauthorized worker access attempt', {
+        requestId,
+        authHeader: authHeader?.substring(0, 20),
+        expectedAuth: expectedAuth.substring(0, 20)
+      });
       return NextResponse.json(
         { error: 'forbidden', message: 'Worker 인증이 필요합니다', requestId },
         { status: 403 }
