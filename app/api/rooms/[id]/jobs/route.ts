@@ -189,7 +189,7 @@ export async function GET(
     const transformedJobs = jobs.map(job => {
       const jobModel = new JobModel(job);
       const summary = jobModel.getSummary();
-      
+
       return {
         id: job.id,
         type: job.type,
@@ -207,7 +207,10 @@ export async function GET(
         wait_time_seconds: summary.waitTime,
         execution_time_seconds: 0,
         can_be_cancelled: jobModel.canBeCancelled(),
-        can_be_retried: job.status === JobStatus.FAILED && job.retry_count < (job.max_retries || 3)
+        can_be_retried: job.status === JobStatus.FAILED && job.retry_count < (job.max_retries || 3),
+        payload: job.payload ? {
+          round: job.payload.round
+        } : undefined
       };
     });
 
