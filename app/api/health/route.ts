@@ -12,6 +12,12 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       version: process.env.npm_package_version || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
+      env_vars: {
+        WORKER_SECRET: !!process.env.WORKER_SECRET,
+        OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
+        SUPABASE_URL: !!process.env.SUPABASE_URL,
+        SUPABASE_SERVICE_ROLE: !!process.env.SUPABASE_SERVICE_ROLE
+      },
       checks: {
         database: { status: 'unknown', responseTime: 0 },
         openai: { status: 'unknown', responseTime: 0 },
