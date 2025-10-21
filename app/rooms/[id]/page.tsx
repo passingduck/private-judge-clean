@@ -747,6 +747,17 @@ export default function RoomDetailPage() {
                   </>
                 )}
 
+                {/* 반론 작성 버튼 - waiting_rebuttal_1 또는 waiting_rebuttal_2 상태에서 표시 */}
+                {(room.status === 'waiting_rebuttal_1' || room.status === 'waiting_rebuttal_2') && (
+                  <Link
+                    href={`/rooms/${room.id}/rebuttals`}
+                    className="w-full bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 active:bg-orange-800 transition-colors flex items-center justify-center"
+                  >
+                    <DocumentTextIcon className="h-4 w-4 mr-2" />
+                    {room.status === 'waiting_rebuttal_1' ? '1차 토론 반론 작성' : '2차 토론 반론 작성'}
+                  </Link>
+                )}
+
                 {/* AI 처리 진행 상황 */}
                 <JobsProgress jobs={jobs} roomStatus={room.status} />
 
