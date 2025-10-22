@@ -695,7 +695,7 @@ export default function RoomDetailPage() {
                 {room.status === 'agenda_negotiation' && (
                   <Link
                     href={`/rooms/${room.id}/motion`}
-                    className="w-full bg-primary-accent text-white px-4 py-2 rounded-md hover:bg-indigo-700 active:bg-indigo-800 transition-colors flex items-center justify-center"
+                    className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 active:bg-indigo-800 transition-colors flex items-center justify-center"
                   >
                     <DocumentTextIcon className="h-4 w-4 mr-2" />
                     {motion ? '안건 수정' : '안건 제안'}
