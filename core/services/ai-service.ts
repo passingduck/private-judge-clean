@@ -59,8 +59,8 @@ export class AIService {
       model: process.env.OPENAI_MODEL || 'gpt-4',
       temperature: 1,
       maxTokens: 16000,
-      retryAttempts: 3,
-      timeoutMs: 60000
+      retryAttempts: 2, // Reduced from 3 to prevent hitting Vercel 5m limit
+      timeoutMs: 90000 // Increased from 60s to 90s per attempt (total max: 90s * 2 attempts = 3m)
     };
     
     this.openaiApiKey = process.env.OPENAI_API_KEY || '';

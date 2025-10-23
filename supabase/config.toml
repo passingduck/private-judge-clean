@@ -1,0 +1,16 @@
+# Supabase Configuration
+project_id = "ufhrxeyrevjutoezorsy"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323
+
+[functions.job-processor]
+verify_jwt = false

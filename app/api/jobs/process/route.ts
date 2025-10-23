@@ -127,16 +127,40 @@ export async function POST(request: NextRequest) {
       const retryCount = job.retry_count + 1;
       const shouldRetry = retryCount < (job.max_retries || 3);
 
-      await supabase
-        .from('jobs')
-        .update({
-          status: shouldRetry ? JobStatus.QUEUED : JobStatus.FAILED,
-          retry_count: retryCount,
-          updated_at: new Date().toISOString(),
-          scheduled_at: shouldRetry ? new Date(Date.now() + Math.pow(2, retryCount) * 60000).toISOString() : null,
-          error: errorMessage
-        })
-        .eq('id', job.id);
+      // CRITICAL: Update job status before returning to ensure it doesn't stay in 'running' state
+      try {
+        const { error: updateError } = await supabase
+          .from('jobs')
+          .update({
+            status: shouldRetry ? JobStatus.QUEUED : JobStatus.FAILED,
+            retry_count: retryCount,
+            updated_at: new Date().toISOString(),
+            scheduled_at: shouldRetry ? new Date(Date.now() + Math.pow(2, retryCount) * 60000).toISOString() : null,
+            error_message: errorMessage
+          })
+          .eq('id', job.id);
+
+        if (updateError) {
+          console.error('[jobs-process-api] Failed to update job status after error', {
+            requestId,
+            jobId: job.id,
+            updateError: updateError.message
+          });
+        } else {
+          console.info('[jobs-process-api] Job status updated after error', {
+            requestId,
+            jobId: job.id,
+            newStatus: shouldRetry ? 'queued' : 'failed',
+            retryCount
+          });
+        }
+      } catch (updateException) {
+        console.error('[jobs-process-api] Exception while updating job status', {
+          requestId,
+          jobId: job.id,
+          exception: updateException instanceof Error ? updateException.message : String(updateException)
+        });
+      }
 
       return NextResponse.json({
         error: 'processing_error',
