@@ -99,7 +99,9 @@ const stepperSteps = [
   { id: 'waiting_participant', label: '참가자 대기', title: '참가자 대기' },
   { id: 'agenda_negotiation', label: '안건 협상', title: '안건 협상' },
   { id: 'arguments_submission', label: '주장 제출', title: '주장 제출' },
-  { id: 'ai_processing', label: 'AI 토론', title: 'AI 토론' },
+  { id: 'debate_round_1', label: 'AI 토론 - 1차', title: 'AI 토론 - 1차' },
+  { id: 'debate_round_2', label: 'AI 토론 - 2차', title: 'AI 토론 - 2차' },
+  { id: 'debate_round_3', label: 'AI 토론 - 3차', title: 'AI 토론 - 3차' },
   { id: 'completed', label: '완료', title: '완료' }
 ];
 
@@ -390,17 +392,17 @@ export default function RoomDetailPage() {
   };
 
   const getCurrentStepIndex = (status: string) => {
-    // Map all debate round statuses to the simplified 5-step progress
+    // Map all debate round statuses to the detailed 7-step progress
     const statusToStepMap: Record<string, string> = {
       'waiting_participant': 'waiting_participant',
       'agenda_negotiation': 'agenda_negotiation',
       'arguments_submission': 'arguments_submission',
-      'debate_round_1': 'ai_processing',
-      'waiting_rebuttal_1': 'ai_processing',
-      'debate_round_2': 'ai_processing',
-      'waiting_rebuttal_2': 'ai_processing',
-      'debate_round_3': 'ai_processing',
-      'ai_processing': 'ai_processing',
+      'debate_round_1': 'debate_round_1',
+      'waiting_rebuttal_1': 'debate_round_1',
+      'debate_round_2': 'debate_round_2',
+      'waiting_rebuttal_2': 'debate_round_2',
+      'debate_round_3': 'debate_round_3',
+      'ai_processing': 'debate_round_1', // Fallback for generic ai_processing status
       'completed': 'completed',
       'cancelled': 'completed'
     };
@@ -728,7 +730,7 @@ export default function RoomDetailPage() {
                   <>
                     <Link
                       href={`/rooms/${room.id}/arguments`}
-                      className="w-full bg-primary-accent text-white px-4 py-2 rounded-md hover:bg-indigo-700 active:bg-indigo-800 transition-colors flex items-center justify-center"
+                      className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 active:bg-indigo-800 transition-colors flex items-center justify-center"
                     >
                       <DocumentTextIcon className="h-4 w-4 mr-2" />
                       주장 작성
