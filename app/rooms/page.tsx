@@ -35,7 +35,13 @@ const statusLabels: Record<string, string> = {
   'waiting_participant': '참가자 대기',
   'agenda_negotiation': '안건 협상',
   'arguments_submission': '주장 제출',
+  'debate_round_1': '1차 토론',
+  'waiting_rebuttal_1': '1차 반론 대기',
+  'debate_round_2': '2차 토론',
+  'waiting_rebuttal_2': '2차 반론 대기',
+  'debate_round_3': '3차 토론',
   'ai_debate_in_progress': 'AI 토론 진행',
+  'ai_processing': 'AI 판결 진행',
   'completed': '토론 완료',
   'cancelled': '취소됨'
 };
@@ -44,7 +50,13 @@ const statusVariants: Record<string, 'default' | 'primary' | 'success' | 'warnin
   'waiting_participant': 'primary',
   'agenda_negotiation': 'warning',
   'arguments_submission': 'warning',
+  'debate_round_1': 'primary',
+  'waiting_rebuttal_1': 'warning',
+  'debate_round_2': 'primary',
+  'waiting_rebuttal_2': 'warning',
+  'debate_round_3': 'primary',
   'ai_debate_in_progress': 'primary',
+  'ai_processing': 'primary',
   'completed': 'success',
   'cancelled': 'error'
 };

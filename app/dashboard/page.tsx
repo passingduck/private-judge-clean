@@ -74,6 +74,11 @@ export default function DashboardPage() {
       'waiting_participant': '참가자 대기',
       'agenda_negotiation': '안건 협상',
       'arguments_submission': '주장 제출',
+      'debate_round_1': '1차 토론',
+      'waiting_rebuttal_1': '1차 반론 대기',
+      'debate_round_2': '2차 토론',
+      'waiting_rebuttal_2': '2차 반론 대기',
+      'debate_round_3': '3차 토론',
       'ai_processing': 'AI 처리중',
       'completed': '완료',
       'cancelled': '취소됨'
@@ -86,6 +91,11 @@ export default function DashboardPage() {
       'waiting_participant': 'bg-yellow-100 text-yellow-800',
       'agenda_negotiation': 'bg-blue-100 text-blue-800',
       'arguments_submission': 'bg-purple-100 text-purple-800',
+      'debate_round_1': 'bg-indigo-100 text-indigo-800',
+      'waiting_rebuttal_1': 'bg-yellow-100 text-yellow-800',
+      'debate_round_2': 'bg-indigo-100 text-indigo-800',
+      'waiting_rebuttal_2': 'bg-yellow-100 text-yellow-800',
+      'debate_round_3': 'bg-indigo-100 text-indigo-800',
       'ai_processing': 'bg-indigo-100 text-indigo-800',
       'completed': 'bg-green-100 text-green-800',
       'cancelled': 'bg-gray-100 text-gray-800'
