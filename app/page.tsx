@@ -91,26 +91,6 @@ export default function HomePage() {
                 데모 보기
               </Link>
             </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 max-w-2xl mx-auto px-4">
-              <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">1,000+</div>
-                <div className="text-xs sm:text-sm text-gray-600">활성 사용자</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">5,000+</div>
-                <div className="text-xs sm:text-sm text-gray-600">토론 세션</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">98%</div>
-                <div className="text-xs sm:text-sm text-gray-600">만족도</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">24/7</div>
-                <div className="text-xs sm:text-sm text-gray-600">AI 지원</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
