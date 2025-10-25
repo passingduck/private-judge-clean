@@ -7,8 +7,7 @@ import {
   ArrowRightIcon,
   UserGroupIcon,
   LightBulbIcon,
-  TrophyIcon,
-  PlayIcon
+  TrophyIcon
 } from '@heroicons/react/24/outline';
 
 export default function HomePage() {
@@ -81,14 +80,6 @@ export default function HomePage() {
               >
                 토론방 만들기
                 <ArrowRightIcon className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              
-              <Link
-                href="/rooms"
-                className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 flex items-center justify-center"
-              >
-                <PlayIcon className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                데모 보기
               </Link>
             </div>
           </div>
@@ -260,12 +251,6 @@ export default function HomePage() {
               className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-indigo-600 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
             >
               무료로 시작하기
-            </Link>
-            <Link
-              href="/rooms"
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-transparent text-white font-semibold rounded-xl border-2 border-white hover:bg-white hover:text-indigo-600 transition-all duration-200"
-            >
-              둘러보기
             </Link>
           </div>
         </div>
